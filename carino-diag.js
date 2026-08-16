@@ -19,6 +19,18 @@
      * Lazy — nothing is requested until the panel is first opened,
        so simply loading the page contacts no third party.
 
+   On an intranet, point it at an address service of your own and no
+   third party is contacted even then:
+
+     <script src="carino-diag.js" data-whoami="/whoami" defer></script>
+
+   Anything answering with a bare IP address in the body will do.
+   Caddy needs one line — see carino-offline.caddyfile.example in
+   MiguelCarino/Custom-Images. It is tried before every public
+   provider, and if it 404s or is not configured the chain simply
+   carries on, so a page can ship the attribute before the box that
+   answers it exists.
+
    Self-contained: styles are inlined and scoped under #cnDiagBox /
    #cnDiagBtn with hard-coded colours (no CSS variables), so it is
    safe on light-themed or Tailwind pages and needs no CDN.
@@ -90,16 +102,54 @@
 
   /* ---- probes (same providers and fallback order as the hub) ---- */
 
-  function fetchJSON(url, timeoutMs) {
+  function fetchWith(url, timeoutMs, read) {
     var ctrl = new AbortController();
     var t = setTimeout(function () { ctrl.abort(); }, timeoutMs || 4000);
     return fetch(url, { mode: 'cors', signal: ctrl.signal, cache: 'no-store' })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
+        return read(res);
       })
       .finally(function () { clearTimeout(t); });
   }
+  function fetchJSON(url, timeoutMs) {
+    return fetchWith(url, timeoutMs, function (r) { return r.json(); });
+  }
+  // Half the providers below answer in plain text rather than JSON — that is
+  // the point of them: an address is a string, and a service that hands it over
+  // without a JSON envelope has nothing to rate-limit and nothing to parse
+  // wrong. Trimmed because a trailing newline is normal for these.
+  function fetchText(url, timeoutMs) {
+    return fetchWith(url, timeoutMs, function (r) { return r.text(); })
+      .then(function (s) {
+        var v = String(s).trim();
+        if (!v) throw new Error('empty body');
+        return v;
+      });
+  }
+  // Cloudflare's trace endpoint: `key=value` lines, one per line.
+  function fetchTrace(url, key, timeoutMs) {
+    return fetchText(url, timeoutMs).then(function (body) {
+      var lines = body.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].indexOf(key + '=') === 0) return lines[i].slice(key.length + 1).trim();
+      }
+      throw new Error('no ' + key + ' in trace');
+    });
+  }
+
+  // An address service on the network the visitor is actually on. Off unless a
+  // page asks for it — <script src="carino-diag.js" data-whoami="/whoami">, or
+  // an absolute URL to the LAN box that answers. On an intranet this is the
+  // only provider that can work at all, and where it is configured it runs
+  // first so no third party is contacted for something the LAN already knows.
+  // Caddy answers it in one line; see carino-offline.caddyfile.example in
+  // MiguelCarino/Custom-Images.
+  var WHOAMI = (function () {
+    var s = document.currentScript ||
+            document.querySelector('script[src*="carino-diag.js"]');
+    return (s && s.getAttribute('data-whoami')) || null;
+  })();
 
   // Walk the provider list in order, resolving on the first that answers.
   function tryProviders(list) {
@@ -117,16 +167,45 @@
     set('cnDiagV4', '...'); set('cnDiagV6', '...');
     dot('cnDiagDot4', 'scan'); dot('cnDiagDot6', 'scan');
 
-    var v4 = tryProviders([
-      function () { return fetchJSON('https://api4.ipify.org?format=json').then(function (d) { return d.ip; }); },
-      function () { return fetchJSON('https://api.ipify.org?format=json').then(function (d) { return d.ip; }); },
-      function () { return fetchJSON('https://ipapi.co/json/').then(function (d) { return d.ip; }); }
-    ]);
-    var v6 = tryProviders([
-      function () { return fetchJSON('https://api6.ipify.org?format=json').then(function (d) { return d.ip; }); },
-      function () { return fetchJSON('https://api64.ipify.org?format=json').then(function (d) { return d.ip; }); },
-      function () { return fetchJSON('https://ipapi.co/json/').then(function (d) { return d.ip; }); }
-    ]);
+    // Every provider is wrapped in the family it is being asked for, and that
+    // is a fix rather than a tidy-up. A provider can answer with whichever
+    // family the browser happened to reach it over — `api64.ipify.org` says so
+    // in its name, and a LAN endpoint has no say in it at all. A chain resolves
+    // on its FIRST success, so a wrong-family answer used to end the chain and
+    // then fail the dot/colon test below, reporting "Unavailable" without ever
+    // trying the provider that would have answered correctly. Rejecting here
+    // instead lets the chain carry on to the next one.
+    //
+    // The last entry in each chain is Cloudflare's trace over an IP LITERAL, so
+    // it needs no DNS lookup to answer at all. On a site about what happens
+    // when DNS is taken away, that is the one provider that still means
+    // something.
+    var only = function (want, get) {
+      return function () {
+        return get().then(function (ip) {
+          var v = String(ip);
+          var is6 = v.indexOf(':') > -1;
+          if ((want === 6) !== is6) throw new Error('wrong family: ' + v);
+          return v;
+        });
+      };
+    };
+    var whoami = function (want) {
+      return WHOAMI ? [only(want, function () { return fetchText(WHOAMI); })] : [];
+    };
+
+    var v4 = tryProviders(whoami(4).concat([
+      only(4, function () { return fetchJSON('https://api4.ipify.org?format=json').then(function (d) { return d.ip; }); }),
+      only(4, function () { return fetchText('https://ipv4.icanhazip.com'); }),
+      only(4, function () { return fetchText('https://4.ident.me'); }),
+      only(4, function () { return fetchTrace('https://1.1.1.1/cdn-cgi/trace', 'ip'); })
+    ]));
+    var v6 = tryProviders(whoami(6).concat([
+      only(6, function () { return fetchJSON('https://api6.ipify.org?format=json').then(function (d) { return d.ip; }); }),
+      only(6, function () { return fetchText('https://ipv6.icanhazip.com'); }),
+      only(6, function () { return fetchText('https://6.ident.me'); }),
+      only(6, function () { return fetchTrace('https://[2606:4700:4700::1111]/cdn-cgi/trace', 'ip'); })
+    ]));
 
     return Promise.allSettled([v4, v6]).then(function (r) {
       var a = r[0], b = r[1];
@@ -145,11 +224,39 @@
     });
   }
 
+  // ipapi.co is no longer first. It is the only row that ever had a single
+  // provider, its free tier is the tightest of the three, and it answers 429
+  // often enough that the ISP line was the one that went "Unavailable" while
+  // everything above it worked. ipwho.is needs no key and, asked for just the
+  // two fields, returns the operator name and the ASN directly; ipinfo.io
+  // prefixes the same name with the AS number, which is what the strip is for.
   function detectISP() {
     set('cnDiagISP', '...');
-    return fetchJSON('https://ipapi.co/json/', 5000).then(function (d) {
-      var org = (d.org || '').replace(/^AS\d+\s+/i, '').trim();
-      set('cnDiagISP', org || 'Unknown');
+    return tryProviders([
+      function () {
+        return fetchJSON('https://ipwho.is/?fields=ip,connection', 5000).then(function (d) {
+          var c = d && d.connection;
+          return (c && (c.isp || c.org)) || '';
+        });
+      },
+      function () {
+        return fetchJSON('https://ipinfo.io/json', 5000).then(function (d) { return d.org || ''; });
+      },
+      function () {
+        return fetchJSON('https://ipapi.co/json/', 5000).then(function (d) { return d.org || ''; });
+      }
+    ].map(function (get) {
+      // An empty name is a failed lookup, not an ISP called nothing: throw so
+      // the chain moves on rather than printing a blank line as a result.
+      return function () {
+        return get().then(function (org) {
+          var name = String(org).replace(/^AS\d+\s+/i, '').trim();
+          if (!name) throw new Error('no org');
+          return name;
+        });
+      };
+    })).then(function (name) {
+      set('cnDiagISP', name);
     }).catch(function () {
       set('cnDiagISP', isFirefox ? 'Blocked by browser' : 'Unavailable');
     });
