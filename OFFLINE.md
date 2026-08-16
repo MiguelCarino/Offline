@@ -138,7 +138,7 @@ It is an image rather than a package list run after install because four of its 
 
 **Two substitutions against §2.4, stated rather than hidden.** Neither Technitium nor step-ca can come from a Fedora 44 RPM: the manifest records `dnf repoquery` returning nothing for `step-ca` and `step-cli`, and Technitium is a .NET application distributed as a tarball or a container image, which on a bootc host is exactly the class of thing the image cannot keep updatable. The image substitutes **bind** — the only thing in Fedora 44 that is authoritative and recursive in one process, which is what split-horizon `view` clauses need — and covers certificates with Caddy's embedded CA for the sites Caddy fronts plus **easy-rsa** for everything else. The cost is real and is the gap: no LAN-wide internal ACME server, so a printer or a switch gets a manually issued cert with a manually tracked expiry, and whoever wanted the DNS GUI gets `named.conf` and a text editor.
 
-**Honest state, as of 2026-08.** No registry ref is published, so there is no working `bootc switch` line yet — today it is a build-it-yourself artifact: clone Custom-Images and build locally. Nothing in the manifest has been booted either; package names and versions were resolved against live Fedora 44 repos and the system facts (preset state, the `resolv.conf` symlink, `chrony.conf` contents) were checked inside the already-built parent layer, but no ISO has been installed and no unit has started. The piece most likely to bite first is the port-53 arbitration. And the content is not in the image and never will be — roughly 180 GB of Kiwix plus up to 600 GB of mirror against a manifest that installs in the low hundreds of megabytes, so a freshly built box is a correctly-built box that does nothing until §3 arrives by rsync or by courier.
+**Honest state, as of 2026-08.** No registry ref is published, so there is no working `bootc switch` line yet — today it is a build-it-yourself artifact: clone Custom-Images and build locally. Nothing in the manifest has been booted either; package names and versions were resolved against live Fedora 44 repos and the system facts (preset state, the `resolv.conf` symlink, `chrony.conf` contents) were checked inside the already-built parent layer, but no ISO has been installed and no unit has started. The piece most likely to bite first is the port-53 arbitration. And the content is not in the image and never will be — roughly 240 GB of Kiwix ZIMs plus up to 600 GB of mirror against a manifest that installs in the low hundreds of megabytes, so a freshly built box is a correctly-built box that does nothing until §3 arrives by rsync or by courier.
 
 ---
 
@@ -150,12 +150,12 @@ Storage sizing is driven by this table, not by "how big a disk can I afford."
 
 | Set | Tool | Size | Notes |
 |---|---|---|---|
-| Wikipedia ES + EN, full w/ images | **Kiwix** (`.zim`) | ~180 GB | `nopic` variants ~55 GB if tight |
+| Wikipedia ES + EN, full w/ images | **Kiwix** (`.zim`) | ~153 GB | `nopic` variants ~60 GB if tight |
 | Wikivoyage, Wiktionary, Wikimed, Wikibooks | Kiwix | ~40 GB | Wikimed is genuinely useful in a clinic |
 | Stack Exchange full dump | Kiwix / local Sphinx | ~100 GB | Programming lifeline offline |
 | Project Gutenberg | Calibre-Web | ~80 GB | Public domain, distributable |
 | OpenStreetMap México + tiles | Protomaps / OpenMapTiles | ~3–5 GB | A country extract is small; the *planet* basemap is ~120 GB |
-| Dev docs (DevDocs, Zeal, man pages) | DevDocs self-hosted | ~15 GB | |
+| Dev docs (DevDocs, Zeal, man pages) | DevDocs self-hosted | ~2 GB | |
 | Khan Academy / edu content | **Kolibri** | ~50 GB | Optional; good for client-facing offering |
 | Web snapshots of pages I rely on | **ArchiveBox** | ~200 GB, grows | Point it at the bookmark bar, run monthly |
 | **Local LLM + RAG over my docs** | Ollama / llama.cpp + open-weight 30B | ~40 GB | See §5.4 — this is the real "offline oracle" |
@@ -214,7 +214,7 @@ Plus **Asobi** (the existing Shogi/Hanafuda repo) — already a self-contained `
 | Off-grid text | **Meshtastic** LoRa, 915 MHz | 2–15 km line of sight |
 | Emergency | Ham (IFT licence, XE callsign) / Winlink | Regional |
 
-Meshtastic is $30/node and needs no infrastructure at all — that's the cheapest genuine resilience in this document.
+Meshtastic is $48/node and needs no infrastructure at all — that's the cheapest genuine resilience in this document.
 
 ---
 
@@ -386,7 +386,7 @@ NFC is the *tap-to-act* layer that makes an intranet feel like a product rather 
 |---|---|---|
 | **Tap-to-open a tool** | NTAG215 sticker on desk/wall/kiosk | NDEF URI → `http://hub.carino.internal/#retina` |
 | **Tap-to-join Wi-Fi** | NTAG215 card at reception | NDEF Wi-Fi record (SSID + WPA2 key) — no typing, no whiteboard |
-| **Asset tags** | NTAG213 sticker on every device | URI → inventory record in Topo |
+| **Asset tags** | NTAG215 sticker on every device | URI → inventory record in Topo |
 | **Business / contact cards** | PVC NFC card | vCard + URI, works with no internet on the recipient's phone |
 | **Equipment loan tracking** | NTAG216 disc on loaner hardware | Asset ID → check-in/out log |
 | **Appliance entitlement token** | PVC card shipped with a Carino Systems box | Signed support-contract ID — a *physical* support token, no licence server |
