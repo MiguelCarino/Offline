@@ -111,6 +111,58 @@
     "note": "Registry refs are not published yet, so today this is a build-it-yourself artifact: clone Custom-Images and build the image locally. The switch line above is the shape it will take, not a download that exists."
   },
 
+  "fleet": {
+    "_comment": "Which carino.systems tools the image can actually serve. Counted by reading every repo for RUNTIME network use - a <script src>, a stylesheet or a fetch() aimed at a host that is not this one. Links inside content do not count: a dead link is a dead link, not a broken tool.",
+    "served": 26,
+    "total": 32,
+    "lead": [
+      {
+        "host": "software.carino.systems",
+        "what": "the catalogue of what to install, by role - the list you need precisely when you cannot reach a vendor page"
+      },
+      {
+        "host": "hardware.carino.systems",
+        "what": "MAC/OUI decode, Dell service-tag conversion, the support directory - pure computation, so it is the same tool offline as on"
+      },
+      {
+        "host": "images.carino.systems",
+        "what": "how the box serving this page is built and switched"
+      }
+    ],
+    "also": "Plus asobi, branding, compass, desk, dicom, distro, font, hash, kanban, learn, media, metadata, netplan, pacs, password, retina, setup, subs, teleprompter, time, topo, vitae - and this page. Every one of them is client-side static with vendored libraries, so serving them is unpacking a directory.",
+    "partial": [
+      {
+        "host": "carino.systems",
+        "what": "the hub",
+        "why": "Its registry links every tool by public hostname, so assets/json/tools.json has to be rewritten to local names before the hub is useful on a LAN. The search itself works untouched."
+      },
+      {
+        "host": "quote.carino.systems",
+        "what": "quotations",
+        "why": "The builder and the PDF export work; only currency conversion needs an FX feed, and it is one field of one line."
+      }
+    ],
+    "tethered": [
+      {
+        "host": "currency.carino.systems",
+        "why": "Live FX rates are the tool. There is nothing left when the feed is gone."
+      },
+      {
+        "host": "cve.carino.systems",
+        "why": "Every search is a query against the NVD API. A mirror of the feed would fix it, and is not small."
+      },
+      {
+        "host": "music.carino.systems",
+        "why": "Artwork and embeds come from YouTube, Apple and Spotify. The catalogue survives; nothing plays."
+      },
+      {
+        "host": "tv.carino.systems",
+        "why": "The streams are remote by definition. A local channel list pointed at local sources would be a different tool."
+      }
+    ],
+    "note": "Two of the four could be made to work by mirroring a feed rather than by changing the tool - which is a grab-list decision, not a software one."
+  },
+
   "limits": [
     {
       "id": "plan-only",

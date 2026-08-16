@@ -593,6 +593,27 @@
         </article>`;
     }
 
+    /* The companion to the row above: the box is one thing, what it has to
+       serve is another, and "the fleet, served locally" was a claim in the
+       Caddyfile that this page never backed with a list. Three named because
+       they are the three that earn their place on a LAN with no route out; the
+       rest are a sentence, and the six that do not work open in the dialog. */
+    const fleet = obj(d.fleet);
+    const fleetLead = arr(fleet.lead);
+    if (fleetLead.length) {
+      html += `<div class="d-lbl">${TT('And what it serves')}
+          <span class="count">${num(fleet.served, 0)} ${TT('of')} ${num(fleet.total, 0)}</span></div>`
+        + fleetLead.map(f => `<article class="row static">
+            <span class="row-main">
+              <span class="row-name num">${escapeHtml(str(f.host))}</span>
+              <span class="row-sub">${escapeHtml(str(f.what))}</span>
+            </span>
+          </article>`).join('')
+        + (fleet.also ? `<p class="d-p t-dim">${escapeHtml(str(fleet.also))}</p>` : '')
+        + `<div class="alts"><button class="alt" type="button" data-act="detail"
+             data-kind="fleetnote" data-rec="0">${TT('What it cannot serve, and why')}</button></div>`;
+    }
+
     const limits = arr(d.limits);
     if (limits.length) {
       html += `<div class="d-lbl">${TT('What this does not do')} ${stamp(d.updated)}</div>
@@ -1867,6 +1888,10 @@
     image:     { list: () => { const i = obj(DATA.start && DATA.start.image); return i.name ? [i] : []; },
                  title: r => str(r.name) },
     limit:     { list: () => arr(DATA.start && DATA.start.limits),   title: r => str(r.name) },
+    /* one object like image, not an array — index "0" is the key */
+    fleetnote: { list: () => { const f = obj(DATA.start && DATA.start.fleet);
+                               return arr(f.tethered).length ? [f] : []; },
+                 title: () => TT('What it cannot serve, and why') },
     grab:      { list: () => arr(DATA.grab && DATA.grab.items),      title: r => r.name },
     stack:     { list: () => arr(DATA.stack && DATA.stack.items),    title: r => (r.icon ? r.icon + ' ' : '') + str(r.name) },
     iron:      { list: () => arr(DATA.iron && DATA.iron.items),      title: r => r.name },
@@ -1922,6 +1947,15 @@
       const sec = SEC_BY_KEY[str(r.goes)];
       return dPara('', r.what) + dPara('Why', r.why)
         + (sec ? `<div class="d-foot"><button class="btn primary" type="button" data-act="go" data-panel="${escapeHtml(sec.key)}">${escapeHtml(TT(sec.title))} →</button></div>` : '');
+    }
+
+    if (kind === 'fleetnote') {
+      const teth = arr(r.tethered), part = arr(r.partial);
+      return (teth.length ? `<div class="d-lbl">${TT('Not served at all')}</div>`
+                + teth.map(x => dPara(str(x.host), str(x.why))).join('') : '')
+        + (part.length ? `<div class="d-lbl">${TT('Served, with one part missing')}</div>`
+                + part.map(x => dPara(str(x.host), str(x.why))).join('') : '')
+        + (r.note ? dPara('', r.note, 't-dim') : '');
     }
 
     if (kind === 'image') {

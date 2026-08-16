@@ -205,6 +205,12 @@ const I18N = {
         'Every': 'Cada',
         'Deliverable': 'Entregable',
         'Exit': 'Salida',
+        // Start (00) — the fleet block
+        "And what it serves": "Y lo que sirve",
+        "of": "de",
+        "What it cannot serve, and why": "Lo que no puede servir, y por qué",
+        "Not served at all": "No se sirve en absoluto",
+        "Served, with one part missing": "Se sirve, con una parte de menos",
         // Start (00) — hero
         "The day the internet is taken away,": "El día que te quiten el internet,",
         "everything you kept locally still opens.": "todo lo que guardaste localmente sigue abriendo.",
@@ -426,6 +432,12 @@ const I18N = {
         'render failed: ': 'falha ao renderizar: ',
         'Could not load': 'Não foi possível carregar',
         'The rest of the site still works.': 'O resto do site continua funcionando.',
+        // Start (00) — the fleet block
+        "And what it serves": "E o que ele serve",
+        "of": "de",
+        "What it cannot serve, and why": "O que ele não consegue servir, e por quê",
+        "Not served at all": "Não é servido de jeito nenhum",
+        "Served, with one part missing": "Servido, com uma parte faltando",
         // Start (00) — hero
         "The day the internet is taken away,": "No dia em que tirarem a internet,",
         "everything you kept locally still opens.": "tudo o que você guardou localmente continua abrindo.",
@@ -647,6 +659,12 @@ const I18N = {
         'Filter': 'フィルター',
         'clear': '解除',
         'Copied ✓': 'コピーしました ✓',
+        // Start (00) — the fleet block
+        "And what it serves": "そして何を配信するか",
+        "of": "/",
+        "What it cannot serve, and why": "配信できないもの、その理由",
+        "Not served at all": "まったく配信できない",
+        "Served, with one part missing": "配信できるが一部が欠ける",
         // Start (00) — hero
         "The day the internet is taken away,": "インターネットを取り上げられた日も、",
         "everything you kept locally still opens.": "手元に置いたものはすべて開く。",
@@ -869,6 +887,12 @@ const I18N = {
         'likelihood': 'вероятность',
         'breaks': 'поломки',
         'clear': 'сбросить',
+        // Start (00) — the fleet block
+        "And what it serves": "И что он раздаёт",
+        "of": "из",
+        "What it cannot serve, and why": "Что он раздать не может и почему",
+        "Not served at all": "Не раздаётся вовсе",
+        "Served, with one part missing": "Раздаётся, но одной части не хватает",
         // Start (00) — hero
         "The day the internet is taken away,": "В день, когда интернет отберут,",
         "everything you kept locally still opens.": "всё, что вы держите локально, всё равно откроется.",

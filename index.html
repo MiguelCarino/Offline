@@ -202,6 +202,8 @@
     .d-p b{color:var(--text-main);}
     .d-lbl{font-family:var(--mono);font-size:0.58rem;font-weight:700;text-transform:uppercase;
       letter-spacing:0.12em;color:var(--text-dim);margin:14px 0 6px;display:flex;gap:8px;align-items:baseline;}
+    /* a count on the right of a label, the way .group-h carries one */
+    .d-lbl .count{margin-left:auto;font-weight:400;letter-spacing:0.06em;color:var(--text-dim);}
     .d-facts{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:12px 0 4px;
       font-family:var(--mono);font-size:0.73rem;line-height:1.5;}
     .d-facts.tight{margin:0;}
@@ -321,21 +323,58 @@
       font-size:min(1.16rem,calc(.9rem + var(--tall) * .0155));}
     .ohero-lede b{color:var(--text-main);}
 
-    /* The uplink is cut and the local ring keeps circulating — the argument of
-       the whole site in one glyph. Same construction as the PACS hero's EKG: a
-       faint full trace with one bright dash sweeping it, which is the only
-       motion on the page. dasharray 22+78 sums to the pathLength of 100, so the
-       lap closes seamlessly. */
-    .ohero-link{display:block;width:min(330px,calc(210px + var(--tall) * .66));height:auto;
-      aspect-ratio:240 / 44;overflow:visible;}
+    /* ── THE MOTIF: two routes, one blocked ──
+       The lede's last claim, animated: a blocked route loses to physical media.
+       A packet leaves the left node along the top route, dies at the cut, and
+       nothing arrives. Then one leaves along the bottom route — drawn dashed,
+       because that route is a disc in a bag — and the right node lights up.
+
+       One 5s cycle drives all of it: the two pulses share the timeline and are
+       separated by animation-delay written into their own keyframes, so there
+       is no JS and nothing to keep in sync. Both paths carry pathLength="100",
+       which makes every offset below a percentage of the route regardless of
+       what the curve actually measures. */
+    .ohero-link{display:block;width:min(370px,calc(258px + var(--tall) * .62));height:auto;
+      aspect-ratio:240 / 72;overflow:visible;}
     .ohero-link .trace{fill:none;stroke:var(--accent);stroke-width:2;opacity:0.14;
       stroke-linecap:round;}
-    .ohero-link .cut{stroke:var(--danger);stroke-width:2;opacity:0.55;stroke-linecap:round;}
-    .ohero-link .pulse{fill:none;stroke:var(--accent);stroke-width:2.6;stroke-linecap:round;
-      stroke-dasharray:22 78;animation:ohero-orbit 3.4s linear infinite;}
-    @keyframes ohero-orbit{from{stroke-dashoffset:100;}to{stroke-dashoffset:0;}}
+    /* the physical route reads as physical before anything moves */
+    .ohero-link .wire{stroke-dasharray:5 6;}
+    .ohero-link .node{fill:var(--accent);opacity:0.28;}
+    .ohero-link .cut{stroke:var(--danger);stroke-width:2;opacity:0.6;stroke-linecap:round;}
+    .ohero-link .pulse{fill:none;stroke:var(--accent);stroke-width:2.8;stroke-linecap:round;
+      stroke-dasharray:14 86;opacity:0;}
+    .ohero-link .p-blocked{animation:ohero-blocked 5s linear infinite;}
+    .ohero-link .p-carried{animation:ohero-carried 5s linear infinite;}
+    .ohero-link .n-dest{animation:ohero-arrive 5s linear infinite;}
+
+    /* out of the source, and dead at the cut half way along */
+    @keyframes ohero-blocked{
+      0%{stroke-dashoffset:14;opacity:0;}
+      3%{opacity:0.95;}
+      22%{stroke-dashoffset:-36;opacity:0.95;}
+      27%,100%{stroke-dashoffset:-36;opacity:0;}
+    }
+    /* then the same trip by hand, the whole way */
+    @keyframes ohero-carried{
+      0%,34%{stroke-dashoffset:14;opacity:0;}
+      37%{opacity:0.95;}
+      72%{stroke-dashoffset:-86;opacity:0.95;}
+      80%,100%{stroke-dashoffset:-86;opacity:0;}
+    }
+    /* and only then does the far end have it */
+    @keyframes ohero-arrive{
+      0%,68%{opacity:0.28;}
+      76%,88%{opacity:1;}
+      96%,100%{opacity:0.28;}
+    }
+    /* Reduced motion still has to make the point, so it keeps the frame the
+       animation exists for: a packet stopped at the cut, another part-way down
+       the route that works. */
     @media(prefers-reduced-motion:reduce){
-      .ohero-link .pulse{animation:none;stroke-dasharray:none;}
+      .ohero-link .p-blocked,.ohero-link .p-carried,.ohero-link .n-dest{animation:none;}
+      .ohero-link .p-blocked{opacity:0.95;stroke-dashoffset:-36;}
+      .ohero-link .p-carried{opacity:0.95;stroke-dashoffset:-36;}
     }
     /* Removed rather than hidden: a phone needs the height more than the
        picture, and display:none gives the row back. The mark stays — it is the
@@ -537,18 +576,22 @@
           <path d="M 81.07 25.82 A 34.81 34.81 0 1 0 81.07 74.18" fill="none"
                 stroke="var(--accent)" stroke-width="16.38" stroke-linecap="butt"/>
         </svg>
-        <!-- Drawn wide and flat so it reads as the mark's underline, the way the
-             PACS hero's EKG does. The geometry spans 26..214 of a 240 viewBox so
-             its optical centre is the viewBox centre — content weighted to one
-             side leaves the glyph looking shifted under a centred logo. -->
-        <svg class="ohero-link" viewBox="0 0 240 44" preserveAspectRatio="xMidYMid meet">
-          <!-- the uplink, severed -->
-          <polyline class="trace" points="26,22 74,22" />
-          <path class="cut" d="M84 12 L98 32 M98 12 L84 32" />
-          <!-- and the LAN it was feeding, still going round -->
-          <polyline class="trace" points="108,22 160,22" />
-          <circle class="trace" cx="196" cy="22" r="18" />
-          <circle class="pulse" cx="196" cy="22" r="18" pathLength="100" />
+        <!-- Two routes between the same two points. The top one is cut; the
+             bottom one is dashed because it is a disc in a bag. Each route is
+             drawn twice — a faint trace and a bright pulse over it, the same
+             construction as the PACS hero's EKG. Duplicated rather than <use>d:
+             a clone keeps the styling of the element it references, so the
+             pulse would come out faint. Geometry spans 20..220 of a 240 viewBox
+             so the glyph's optical centre is the viewBox centre — weighted to
+             one side it looks shifted under a centred mark. -->
+        <svg class="ohero-link" viewBox="0 0 240 72" preserveAspectRatio="xMidYMid meet">
+          <path class="trace" d="M 24 36 C 70 2 170 2 216 36" />
+          <path class="trace wire" d="M 24 36 C 70 70 170 70 216 36" />
+          <path class="cut" d="M112 5 L128 21 M128 5 L112 21" />
+          <circle class="node" cx="24" cy="36" r="5" />
+          <circle class="node n-dest" cx="216" cy="36" r="5" />
+          <path class="pulse p-blocked" pathLength="100" d="M 24 36 C 70 2 170 2 216 36" />
+          <path class="pulse p-carried" pathLength="100" d="M 24 36 C 70 70 170 70 216 36" />
         </svg>
       </div>
       <!-- No eyebrow naming the project: the navbar says "Carino · OFFLINE" 50px
