@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/webp" href="logo.webp">
+  <title>Carino Offline — intranet, sneakernet &amp; the offline stack</title>
+  <meta name="description" content="What to download before you can't, which software still works with the WAN cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. Runs entirely in your browser, offline.">
+
+  <link rel="stylesheet" href="fonts/carino-fonts.css">
+
+  <style>
+    :root{
+      --accent:#eab308; --accent-faint:rgba(234,179,8,0.05); --accent-glow:rgba(234,179,8,0.15);
+      --primary-hover:#fbbf24;
+      --bg-body:#050505; --bg-elev:#0d0d0d; --bg-card:#0b0b0b;
+      --text-main:#fff; --text-muted:#a3a3a3; --text-dim:#666;
+      --border:#262626; --border-glow:rgba(234,179,8,0.3);
+      --ok:#22c55e; --danger:#ef4444; --warn:#eab308; --info:#38bdf8;
+      --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+      --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+      --display:'Red Hat Display',var(--sans);
+    }
+    *{box-sizing:border-box;}
+    html,body{height:100%;}
+    html{overflow:hidden;}
+    body{font-family:var(--sans);margin:0;background:var(--bg-body);color:var(--text-main);
+      height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+      background-image:radial-gradient(1200px 500px at 50% -8%,rgba(234,179,8,0.05),transparent 70%);}
+    a{color:var(--accent);text-decoration:none;}
+    a:hover{color:var(--primary-hover);}
+    button{font-family:inherit;}
+    h2,h3,h4,h5{font-family:var(--display);}
+
+    /* the app fills whatever the navbar leaves; nothing here ever scrolls the page */
+    .wrap{flex:1;min-height:0;max-width:1180px;width:100%;margin:0 auto;padding:14px 20px 8px;
+      display:flex;flex-direction:column;overflow:hidden;}
+    @media(max-width:420px){.wrap{padding:12px 12px 6px;}}
+
+    /* ── APP BAR: page header + search ── */
+    .appbar{flex-shrink:0;display:flex;flex-direction:column;gap:8px;}
+    .app-intro{display:flex;flex-direction:column;gap:3px;}
+    .app-eyebrow{font-family:var(--mono);font-size:0.6rem;font-weight:700;letter-spacing:0.16em;
+      text-transform:uppercase;color:var(--accent);}
+    .app-title{margin:0;font-family:var(--display);font-weight:900;font-size:1.85rem;line-height:1.05;
+      background:linear-gradient(130deg,#fef08a 0%,#eab308 48%,#b45309 100%);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .app-desc{margin:1px 0 0;color:var(--text-muted);font-size:0.84rem;line-height:1.45;max-width:840px;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .app-desc b{color:var(--text-main);}
+    @media(max-width:640px){.app-title{font-size:1.5rem;}.app-desc{font-size:0.8rem;}}
+    .searchbox{position:relative;width:100%;}
+    .searchbox svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-dim);pointer-events:none;}
+    #q{width:100%;background:var(--bg-elev);border:1px solid var(--border);border-radius:11px;color:var(--text-main);
+      font-family:var(--mono);font-size:0.95rem;padding:12px 15px 12px 44px;transition:0.15s;}
+    #q::placeholder{color:var(--text-dim);}
+    #q:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-glow);}
+    #q::-webkit-search-cancel-button{filter:grayscale(1) opacity(0.5);}
+
+    /* Chip row: one scrolling line, never a wrapping block. Fourteen categories
+       wrapping to three rows pushed the actual list below the fold. */
+    #chips{font-family:var(--mono);font-size:0.64rem;color:var(--text-dim);
+      display:flex;gap:6px;align-items:center;flex-wrap:nowrap;min-height:22px;
+      overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding-bottom:1px;}
+    #chips::-webkit-scrollbar{display:none;}
+    /* a panel with no chips must not leave a blank band under the search box */
+    #chips:empty{display:none;}
+    .chip{border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;transition:0.15s;
+      color:var(--text-muted);background:transparent;font-family:var(--mono);font-size:0.64rem;white-space:nowrap;}
+    .chip:hover{border-color:var(--accent);color:var(--accent);}
+    .chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-faint);}
+    .chip-lbl{color:var(--text-muted);}
+
+    /* ── SECTION TABS — relocated into the shared navbar (carino-navbar.js) ── */
+    .tabs{display:flex;gap:6px;align-items:center;}
+    .tab{display:flex;align-items:center;gap:7px;border:1px solid transparent;border-radius:8px;background:transparent;
+      color:var(--text-muted);font-family:var(--sans);font-weight:600;font-size:0.82rem;padding:7px 12px;cursor:pointer;
+      transition:0.13s;white-space:nowrap;line-height:1;}
+    .tab:hover{color:var(--text-main);background:rgba(255,255,255,0.05);}
+    .tab.active{color:var(--accent);background:var(--accent-glow);border-color:rgba(234,179,8,0.4);}
+    .tab .tnum{font-family:var(--mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;opacity:0.7;}
+    .tab .tlead{font-family:var(--sans);font-weight:400;font-size:0.72rem;color:var(--text-dim);}
+    /* inside the 60px navbar there's no room for the numbers / sub-labels */
+    #carinoNav .tab .tnum,#carinoNav .tab .tlead{display:none;}
+    #carinoNav .cn-actions{overflow-x:auto;scrollbar-width:none;}
+    #carinoNav .cn-actions::-webkit-scrollbar{display:none;}
+    @media(max-width:520px){#carinoNav .tab{padding:7px 9px;font-size:0.78rem;}}
+
+    /* ── PANELS: exactly one visible, fills remaining height ── */
+    .panels{position:relative;flex:1;min-height:0;margin-top:12px;}
+    .panel{position:absolute;inset:0;display:none;flex-direction:column;overflow-y:auto;overflow-x:hidden;
+      padding-right:4px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .panel::-webkit-scrollbar{width:8px;}
+    .panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .panel.active{display:flex;}
+
+    /* rating legend: swatches only — the section description carries the words */
+    .legend{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);}
+    .legend .lg{white-space:nowrap;cursor:help;}
+
+    /* ══ SUMMARY STRIP — one line carrying what four stat tiles used to ══ */
+    .summary{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px;
+      border:1px solid var(--border-glow);border-radius:10px;background:var(--accent-faint);
+      padding:8px 13px;font-family:var(--mono);font-variant-numeric:tabular-nums;}
+    .sm-c{font-size:0.72rem;color:var(--text-dim);white-space:nowrap;}
+    .sm-c b{color:var(--accent);font-size:0.92rem;font-weight:700;}
+    .sm-of{color:var(--text-dim);font-weight:400;font-size:0.72rem;}
+    .sm-k{font-size:0.58rem;text-transform:uppercase;letter-spacing:0.09em;}
+    .sm-bar{flex:1;min-width:70px;height:4px;border-radius:3px;background:var(--border);overflow:hidden;display:block;}
+    .sm-pct{font-size:0.68rem;color:var(--accent);font-weight:700;}
+    @media(max-width:620px){.sm-bar{display:none;}.summary{gap:11px;}}
+
+    /* ══ POPUP MENU — keeps six rarely-pressed buttons off the screen ══ */
+    .menu-wrap{position:relative;display:inline-flex;}
+    .menu{position:absolute;top:calc(100% + 5px);left:0;z-index:60;min-width:186px;
+      border:1px solid var(--border);border-radius:9px;background:var(--bg-elev);
+      box-shadow:0 12px 32px rgba(0,0,0,0.55);padding:4px;display:flex;flex-direction:column;gap:2px;}
+    .menu[hidden]{display:none;}
+    .menu-i{text-align:left;border:none;background:transparent;color:var(--text-muted);cursor:pointer;
+      font-family:var(--mono);font-size:0.7rem;padding:7px 10px;border-radius:6px;transition:0.12s;white-space:nowrap;}
+    .menu-i:hover{background:var(--accent-glow);color:var(--accent);}
+    .menu-i.danger:hover{background:rgba(239,68,68,0.14);color:var(--danger);}
+
+    /* ══ COMPACT ROW — the density primitive.
+       One line: name, a one-clause gist, and the numbers you scan by. Prose,
+       commands and caveats live in the detail dialog, not here. ══ */
+    .row{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:12px;
+      padding:9px 12px;border:1px solid transparent;border-bottom-color:var(--border);
+      cursor:pointer;transition:0.12s;min-width:0;}
+    .row:hover{background:var(--accent-faint);border-color:var(--border-glow);border-radius:9px;}
+    .row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:9px;}
+    .row.static{cursor:default;}
+    .row.static:hover{background:transparent;border-color:transparent;border-bottom-color:var(--border);}
+    .row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin:0;}
+    .row-x{color:var(--danger);font-size:0.8rem;width:16px;text-align:center;flex-shrink:0;}
+    .row-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+    .row-name{font-size:0.87rem;font-weight:600;color:var(--text-main);line-height:1.3;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .row-sub{font-size:0.76rem;color:var(--text-muted);line-height:1.35;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .row-cat{font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);white-space:nowrap;}
+    .row-num{font-family:var(--mono);font-size:0.72rem;color:var(--text-main);white-space:nowrap;
+      text-align:right;min-width:52px;}
+    .row-flag{color:var(--danger);font-size:0.78rem;}
+    .row.done .row-name{color:var(--text-dim);text-decoration:line-through;}
+    .row.done .row-sub{color:var(--text-dim);}
+    .row.wont{opacity:0.72;}
+    .row.wont .row-name{color:var(--text-muted);}
+    .row.tether{border-left:2px solid rgba(239,68,68,0.5);}
+    .row.dim{opacity:0.34;}
+    .row.phase.done .row-name{color:var(--ok);text-decoration:none;}
+    .row.phase.wip .row-name{color:var(--accent);}
+    .bar.mini{height:3px;margin-top:5px;max-width:220px;}
+    @media(max-width:720px){
+      .row{grid-template-columns:auto 1fr auto;gap:9px;padding:8px 10px;}
+      .row-cat{display:none;}
+      .row-num:last-child{display:none;}
+    }
+
+    /* ══ TILE — the stack grid. Same idea, laid out as a card grid. ══ */
+    .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;}
+    .tile{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;cursor:pointer;
+      border:1px solid var(--border);border-radius:10px;background:var(--bg-card);padding:10px 12px;transition:0.12s;min-width:0;}
+    .tile:hover{border-color:var(--border-glow);background:var(--accent-faint);transform:translateY(-1px);}
+    .tile:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+    .tile-dot{font-size:0.66rem;line-height:1.6;}
+    .tile-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+    .tile-name{font-size:0.85rem;font-weight:600;color:var(--text-main);line-height:1.3;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tile-sub{font-size:0.74rem;color:var(--text-muted);line-height:1.4;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+    /* sub-navigation inside a panel — one block on screen at a time */
+    .seg.sub{margin-bottom:10px;}
+    .seg.sub .seg-btn .sub{font-size:0.54rem;opacity:0.7;}
+    .lede{margin-bottom:11px;}
+    .lede p{margin:0 0 8px;font-size:0.82rem;color:var(--text-muted);line-height:1.55;max-width:820px;}
+
+    /* ══ DETAIL DIALOG ══ */
+    .modal-back{position:fixed;inset:0;z-index:2147483100;display:none;
+      background:rgba(0,0,0,0.72);backdrop-filter:blur(3px);padding:24px;overflow-y:auto;}
+    .modal-back.open{display:flex;align-items:flex-start;justify-content:center;}
+    .modal{background:var(--bg-elev);border:1px solid var(--border);border-radius:14px;
+      width:100%;max-width:620px;margin:auto;box-shadow:0 24px 70px rgba(0,0,0,0.6);
+      display:flex;flex-direction:column;max-height:calc(100dvh - 48px);}
+    .modal-h{display:flex;align-items:flex-start;gap:12px;padding:15px 17px;border-bottom:1px solid var(--border);
+      background:var(--accent-faint);border-radius:14px 14px 0 0;flex-shrink:0;}
+    .modal-h h3{margin:0;font-size:1rem;font-weight:800;color:var(--text-main);line-height:1.3;flex:1;}
+    .modal-x{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);
+      width:28px;height:28px;cursor:pointer;flex-shrink:0;transition:0.15s;line-height:1;}
+    .modal-x:hover{border-color:var(--accent);color:var(--accent);}
+    .modal-b{padding:15px 17px 17px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .modal-b::-webkit-scrollbar{width:8px;}
+    .modal-b::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .d-p{margin:0 0 9px;font-size:0.83rem;color:var(--text-muted);line-height:1.6;}
+    .d-p b{color:var(--text-main);}
+    .d-lbl{font-family:var(--mono);font-size:0.58rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.12em;color:var(--text-dim);margin:14px 0 6px;display:flex;gap:8px;align-items:baseline;}
+    .d-facts{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:12px 0 4px;
+      font-family:var(--mono);font-size:0.73rem;line-height:1.5;}
+    .d-facts.tight{margin:0;}
+    .d-k{color:var(--text-dim);white-space:nowrap;}
+    .d-v{color:var(--text-main);}
+    .d-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:13px;
+      padding-top:11px;border-top:1px solid var(--border);}
+    @media(max-width:520px){.modal-back{padding:12px;}.modal{max-height:calc(100dvh - 24px);}}
+
+    /* ── LOAD FAILURE STRIP — a missing JSON file must be loud, not silent ── */
+    #loadErr{flex-shrink:0;margin-top:10px;display:flex;gap:9px;align-items:flex-start;
+      border:1px solid rgba(239,68,68,0.45);background:rgba(239,68,68,0.07);border-radius:9px;
+      padding:9px 12px;font-family:var(--mono);font-size:0.7rem;line-height:1.5;color:#fca5a5;}
+    #loadErr b{color:#fecaca;}
+
+    /* ══ CONTROL SURFACES ══ */
+    .ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .ctl-lbl{font-family:var(--mono);font-size:0.58rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.12em;color:var(--text-dim);white-space:nowrap;}
+
+    /* segmented control — time budget, iron tier, sneakernet channel */
+    .seg{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--border);border-radius:10px;
+      background:var(--bg-elev);flex-wrap:wrap;}
+    .seg-btn{border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text-muted);
+      font-family:var(--mono);font-size:0.68rem;font-weight:600;padding:6px 11px;cursor:pointer;
+      white-space:nowrap;transition:0.13s;display:inline-flex;align-items:center;gap:7px;line-height:1.2;}
+    .seg-btn:hover{color:var(--text-main);background:rgba(255,255,255,0.05);}
+    .seg-btn.active{color:var(--accent);background:var(--accent-glow);border-color:rgba(234,179,8,0.4);}
+    .seg-btn .sub{font-size:0.56rem;font-weight:400;color:var(--text-dim);letter-spacing:0.04em;}
+    .seg-btn.active .sub{color:var(--accent);opacity:0.75;}
+    .seg-btn .rec{font-size:0.5rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;
+      color:var(--accent);border:1px solid var(--border-glow);border-radius:4px;padding:2px 5px;}
+
+    .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:8px;
+      background:var(--bg-elev);color:var(--text-muted);font-family:var(--mono);font-size:0.68rem;
+      font-weight:600;padding:7px 12px;cursor:pointer;transition:0.14s;white-space:nowrap;}
+    .btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-faint);}
+    .btn.primary{border-color:var(--border-glow);color:var(--accent);background:var(--accent-faint);}
+    .btn.primary:hover{background:var(--accent-glow);}
+
+    /* ══ BADGES ══ (.tag kept as an alias of .badge — same rules, either name works) */
+    .badge,.tag{font-family:var(--mono);font-size:0.58rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.06em;padding:4px 8px;border-radius:5px;border:1px solid var(--border);
+      color:var(--text-muted);white-space:nowrap;display:inline-flex;align-items:center;gap:5px;line-height:1.2;}
+    .badge.ok,.tag.ok{color:var(--ok);border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.06);}
+    .badge.info,.tag.info{color:var(--info);border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.06);}
+    .badge.warn,.tag.warn{color:var(--warn);border-color:rgba(234,179,8,0.4);background:var(--accent-faint);}
+    .badge.danger,.tag.danger{color:var(--danger);border-color:rgba(239,68,68,0.45);background:rgba(239,68,68,0.07);}
+    .badge.accent,.tag.accent{color:var(--accent);border-color:var(--border-glow);background:var(--accent-faint);}
+    .badge.big{font-size:0.64rem;padding:5px 10px;}
+
+    /* text-colour utilities for data-driven states (likelihood, severity, ratings) */
+    .t-ok{color:var(--ok);} .t-info{color:var(--info);} .t-warn{color:var(--warn);}
+    .t-danger{color:var(--danger);} .t-dim{color:var(--text-dim);} .t-mut{color:var(--text-muted);}
+    .t-accent{color:var(--accent);}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ GROUPS / GRIDS / CARDS ══ */
+    .group{margin-bottom:20px;}
+    .group-h{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--mono);font-size:0.62rem;
+      font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:var(--accent);
+      border-bottom:1px solid var(--border);padding-bottom:6px;}
+    .group-h .count{margin-left:auto;color:var(--text-dim);font-weight:400;letter-spacing:0.06em;}
+    .group-h .lead{color:var(--text-dim);font-weight:400;letter-spacing:0.04em;text-transform:none;font-size:0.66rem;}
+
+    /* offline rating drives the tile's left edge — visible before you read a word */
+    .tile.rate-full{border-left:2px solid var(--ok);}
+    .tile.rate-sync{border-left:2px solid var(--info);}
+    .tile.rate-tethered{border-left:2px solid var(--danger);}
+
+    /* label/value pairs inside cards and detail blocks */
+
+    /* ── ALTS: the "if you can't get it, get this" row ── */
+    .alts{display:flex;gap:5px;flex-wrap:wrap;}
+    .alt{font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);border:1px solid var(--border);
+      border-radius:5px;padding:2px 7px;}
+    /* the same pill used as a button — Start's premise and limits blocks */
+    button.alt{background:transparent;cursor:pointer;line-height:1.6;transition:0.13s;}
+    button.alt:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-faint);}
+
+    /* ══ START PANEL ══ the five sections as cards, then the numbered route ══ */
+    .start-tiles{grid-template-columns:repeat(auto-fill,minmax(205px,1fr));margin-bottom:4px;}
+    .start-card .tile-dot{font-family:var(--mono);font-size:0.72rem;font-weight:700;line-height:1.5;}
+    .start-card .tile-n{font-size:0.6rem;letter-spacing:0.06em;margin-top:3px;}
+    .start-step .step-n{font-family:var(--mono);font-size:0.6rem;font-weight:700;color:var(--accent);
+      border:1px solid var(--border-glow);border-radius:5px;padding:2px 6px;line-height:1;}
+    .start-step .copybtn{flex-shrink:0;}
+    /* This is the landing screen and it has to fit a 1400x900 laptop without
+       scrolling — measured at 656px of content against a 590px panel — so its
+       rows and labels run tighter than the list panels'. Nothing is removed:
+       the six honest limits are the last block and they were the block that
+       fell off the bottom. */
+    #startBody .row{padding:6px 12px;}
+    #startBody .d-lbl{margin:8px 0 4px;}
+    #startBody .lede{margin-bottom:5px;}
+    #startBody .lede p{margin-bottom:6px;}
+    #startBody .start-tiles{margin-bottom:0;}
+    #startBody .start-card{padding:8px 12px;}
+
+    /* ══ COPYABLE CODE ══ the install line, the burn command, the rsync invocation */
+    .code,code.copy{position:relative;display:block;font-family:var(--mono);font-size:0.72rem;line-height:1.6;
+      color:var(--text-main);background:var(--bg-body);border:1px solid var(--border);border-radius:8px;
+      padding:9px 60px 9px 11px;white-space:pre-wrap;word-break:break-word;cursor:pointer;transition:0.14s;}
+    .code:hover,code.copy:hover{border-color:var(--border-glow);}
+    .code::after,code.copy::after{content:'copy';position:absolute;top:7px;right:9px;font-size:0.54rem;
+      font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);}
+    .code:hover::after,code.copy:hover::after{color:var(--accent);}
+    .code.copied::after,code.copy.copied::after{content:'copied';color:var(--ok);}
+    .code .cm{color:var(--text-dim);}   /* shell comment lines inside a recipe */
+    .copybtn{font-family:var(--mono);font-size:0.54rem;font-weight:700;letter-spacing:0.1em;
+      text-transform:uppercase;color:var(--text-dim);background:transparent;border:1px solid var(--border);
+      border-radius:5px;padding:3px 7px;cursor:pointer;transition:0.14s;}
+    .copybtn:hover{color:var(--accent);border-color:var(--accent);}
+    .copybtn.copied{color:var(--ok);border-color:rgba(34,197,94,0.4);}
+
+    /* ══ TABLES ══ threat model, media, cadence, breaks */
+    .tblwrap{overflow-x:auto;border:1px solid var(--border);border-radius:11px;background:var(--bg-card);
+      scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .tblwrap::-webkit-scrollbar{height:8px;}
+    .tblwrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    table.tbl{border-collapse:collapse;width:100%;min-width:560px;font-size:0.79rem;}
+    .tbl th{font-family:var(--mono);font-size:0.57rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.1em;color:var(--accent);text-align:left;padding:9px 12px;
+      border-bottom:1px solid var(--border);background:var(--accent-faint);white-space:nowrap;
+      position:sticky;top:0;z-index:1;}
+    .tbl td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text-muted);
+      line-height:1.5;vertical-align:top;}
+    .tbl tbody tr:last-child td{border-bottom:none;}
+    .tbl tbody tr:hover td{background:rgba(255,255,255,0.02);}
+    .tbl td b,.tbl td strong{color:var(--text-main);font-weight:600;}
+    .tbl td.num,.tbl th.num{font-family:var(--mono);text-align:right;white-space:nowrap;
+      font-variant-numeric:tabular-nums;}
+    .tbl td.key{color:var(--text-main);font-weight:600;white-space:nowrap;}
+
+    .escape{margin-top:6px;font-size:0.74rem;line-height:1.5;color:#fca5a5;
+      border-left:2px solid rgba(239,68,68,0.5);padding-left:9px;}
+    .escape b{color:#fecaca;}
+
+    /* ══ TIER ACCORDIONS ══ */
+    .tier{border:1px solid var(--border);border-radius:12px;background:var(--bg-elev);
+      margin-bottom:12px;overflow:hidden;}
+    .tier-h{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;
+      border-bottom:1px solid var(--border);background:var(--accent-faint);color:inherit;
+      padding:11px 14px;cursor:pointer;transition:0.14s;}
+    .tier-h:hover{background:var(--accent-glow);}
+    .tier-name{font-family:var(--display);font-weight:700;font-size:0.98rem;}
+    .tier-lead{font-family:var(--sans);font-weight:400;font-size:0.75rem;color:var(--text-muted);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;}
+    .tier-meta{margin-left:auto;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);
+      white-space:nowrap;font-variant-numeric:tabular-nums;}
+    .tier-body{padding:2px 10px 6px;}
+    .tier.collapsed .tier-body{display:none;}
+    .tier.collapsed .tier-h{border-bottom:none;}
+    .tier.wont{border-color:rgba(239,68,68,0.35);}
+    .tier.wont .tier-h{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.25);}
+    .tier.wont .tier-h:hover{background:rgba(239,68,68,0.11);}
+    .tier.wont .tier-name{color:#fca5a5;}
+
+    /* ══ SUMMARY / READINESS ══ */
+    #grabSummary{flex-shrink:0;border:1px solid var(--border-glow);border-radius:12px;
+      background:var(--accent-faint);padding:12px 14px;margin-bottom:13px;
+      display:flex;flex-direction:column;gap:11px;}
+
+    .bar{height:8px;border-radius:5px;background:var(--bg-body);border:1px solid var(--border);overflow:hidden;}
+    .bar-fill{display:block;height:100%;width:0;border-radius:4px;transition:width 0.3s ease;
+      background:linear-gradient(90deg,#b45309,#eab308 62%,#fef08a);}
+
+    /* running total strip for the hardware tiers */
+    #ironTotal{flex-shrink:0;display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;
+      border:1px solid var(--border-glow);border-radius:11px;background:var(--accent-faint);
+      padding:11px 14px;margin-bottom:13px;font-family:var(--mono);font-variant-numeric:tabular-nums;}
+    #ironTotal .big{font-size:1.3rem;font-weight:700;color:var(--accent);}
+    #ironTotal .sub{font-size:0.7rem;color:var(--text-muted);}
+    #ironTotal .lbl{font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:0.11em;color:var(--text-dim);}
+
+    .tl-exit{margin-top:9px;font-family:var(--mono);font-size:0.66rem;line-height:1.5;color:var(--accent);
+      border:1px solid var(--border-glow);border-radius:8px;background:var(--accent-faint);padding:7px 10px;}
+    .tl-exit b{color:var(--text-main);}
+
+    /* task checklist inside a phase */
+    .task{display:flex;gap:9px;align-items:flex-start;font-size:0.79rem;color:var(--text-muted);
+      line-height:1.5;padding:4px 0;cursor:pointer;}
+    .task:hover{color:var(--text-main);}
+    .task.done{color:var(--text-dim);text-decoration:line-through;text-decoration-color:var(--border);}
+
+    /* ══ NUMBERED RECIPES (sneakernet) ══ */
+    .steps{list-style:none;counter-reset:step;margin:0;padding:0;}
+    .step{position:relative;counter-increment:step;padding:0 0 0 30px;margin-bottom:11px;}
+    .step::before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:1px;
+      font-family:var(--mono);font-size:0.6rem;font-weight:700;color:var(--accent);
+      border:1px solid var(--border-glow);border-radius:5px;padding:2px 5px;line-height:1;}
+    .step-t{font-size:0.82rem;color:var(--text-main);line-height:1.5;margin-bottom:5px;}
+    .step-t .why{color:var(--text-muted);}
+
+    /* short prose blocks: principles, uses, artifacts */
+
+    /* rules / non-negotiables list */
+    .rules{list-style:none;margin:0;padding:0;counter-reset:rule;}
+    .rules li{position:relative;counter-increment:rule;padding:9px 0 9px 32px;
+      border-bottom:1px solid var(--border);font-size:0.81rem;color:var(--text-muted);line-height:1.55;}
+    .rules li:last-child{border-bottom:none;}
+    .rules li::before{content:counter(rule);position:absolute;left:0;top:9px;font-family:var(--mono);
+      font-size:0.6rem;font-weight:700;color:var(--accent);border:1px solid var(--border-glow);
+      border-radius:5px;padding:2px 6px;line-height:1;}
+    .rules li b{color:var(--text-main);}
+
+    /* ══ EMPTY / HIDDEN ══ */
+    .empty{text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:0.76rem;
+      line-height:1.6;padding:32px 16px;border:1px dashed var(--border);border-radius:11px;}
+    .empty b{color:var(--text-muted);}
+    .hidden{display:none!important;}
+    [hidden]{display:none!important;}
+
+    /* a bordered mount with nothing in it reads as a broken box, and these two
+       stay empty on the data-failure path */
+    #grabSummary:empty,#ironTotal:empty{display:none;}
+
+    /* ── mount-point spacing: set here so app.js never has to think about layout ── */
+    #grabControls,#stackControls{flex-shrink:0;margin-bottom:12px;display:flex;gap:11px;
+      flex-wrap:wrap;align-items:center;}
+    #ironTiers,#sneakChannels{flex-shrink:0;margin-bottom:12px;display:flex;gap:11px;
+      flex-wrap:wrap;align-items:center;}
+    #grabTiers,#stackGrid,#ironGroups,#sneakBody,#startBody{flex-shrink:0;}
+    #ironRules{margin-top:18px;}
+
+    /* slim always-visible footnote (page never scrolls, so this stays pinned) */
+    .footnote{flex-shrink:0;border-top:1px solid var(--border);margin-top:8px;padding-top:7px;
+      font-size:0.66rem;color:var(--text-dim);line-height:1.4;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+    .footnote b{color:var(--text-muted);}
+    .footnote code{font-family:var(--mono);color:var(--text-muted);}
+    .footnote .fn-sep{opacity:0.4;}
+    /* on a phone the footnote costs four lines of list, so keep only the first claim */
+    @media(max-width:640px){
+      .footnote{font-size:0.6rem;}
+      .footnote > span:not(:first-child),.footnote .fn-sep{display:none;}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <!-- Section tabs — carino-navbar.js relocates this into the shared top navbar. -->
+    <nav class="tabs" data-carino-actions role="tablist">
+      <button class="tab active" id="tab-start" data-panel="start" role="tab" aria-controls="panel-start" aria-selected="true"><span class="tnum">00</span> <span data-i18n>Start</span> <span class="tlead" data-i18n>what this is</span></button>
+      <button class="tab" id="tab-grab" data-panel="grab" role="tab" aria-controls="panel-grab" aria-selected="false"><span class="tnum">01</span> <span data-i18n>Triage</span> <span class="tlead" data-i18n>the grab list</span></button>
+      <button class="tab" id="tab-stack" data-panel="stack" role="tab" aria-controls="panel-stack" aria-selected="false"><span class="tnum">02</span> <span data-i18n>Stack</span> <span class="tlead" data-i18n>software</span></button>
+      <button class="tab" id="tab-iron" data-panel="iron" role="tab" aria-controls="panel-iron" aria-selected="false"><span class="tnum">03</span> <span data-i18n>Iron</span> <span class="tlead" data-i18n>hardware &amp; cost</span></button>
+      <button class="tab" id="tab-sneak" data-panel="sneak" role="tab" aria-controls="panel-sneak" aria-selected="false"><span class="tnum">04</span> <span data-i18n>Sneakernet</span> <span class="tlead" data-i18n>physical layer</span></button>
+      <button class="tab" id="tab-plan" data-panel="plan" role="tab" aria-controls="panel-plan" aria-selected="false"><span class="tnum">05</span> <span data-i18n>Playbook</span> <span class="tlead" data-i18n>threats &amp; phases</span></button>
+    </nav>
+
+    <!-- ══════════ APP BAR ══════════ -->
+    <div class="appbar">
+      <div class="app-intro">
+        <!-- Defaults are the site-level header; app.js overwrites them per active section. -->
+        <span class="app-eyebrow" id="appEyebrow" data-i18n>00 — Start</span>
+        <h1 class="app-title" id="appTitle" data-i18n>Where to begin</h1>
+        <p class="app-desc" id="appDesc" data-i18n-html>Five editable data files behind one plan: <b>what to download</b>, what to run, what to buy, how to move it physically, and what still breaks. Pick a section, or search all five at once — this page recommends, it configures nothing.</p>
+      </div>
+      <div class="searchbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input id="q" type="search" spellcheck="false" autocomplete="off" data-i18n-placeholder placeholder="Search all five sections — a tool, a disc, a threat, a line item…">
+      </div>
+      <!-- filter chips: app.js rebuilds this row for whichever panel is active -->
+      <div id="chips"></div>
+    </div>
+
+    <!-- shown only when a data file fails to load; app.js names the file -->
+    <div id="loadErr" class="hidden" role="alert">
+      <span aria-hidden="true">⚠</span>
+      <span data-i18n>A data file failed to load. Serve this folder over http:// or check that the data/ directory is intact.</span>
+    </div>
+
+    <!-- ══════════ PANELS (one visible at a time) ══════════ -->
+    <div class="panels">
+
+      <!-- 00 · START — the default panel; app.js renders the whole screen into #startBody -->
+      <div class="panel active" id="panel-start" role="tabpanel" aria-labelledby="tab-start">
+        <div id="startBody"></div>
+      </div>
+
+      <!-- 01 · TRIAGE -->
+      <div class="panel" id="panel-grab" role="tabpanel" aria-labelledby="tab-grab">
+        <div id="grabControls"></div>
+        <div id="grabSummary"></div>
+        <div id="grabTiers"></div>
+        <div id="grabEmpty" class="empty hidden" data-i18n>Nothing in the grab list matches that search.</div>
+      </div>
+
+      <!-- 02 · STACK -->
+      <div class="panel" id="panel-stack" role="tabpanel" aria-labelledby="tab-stack">
+        <div id="stackControls"></div>
+        <div id="stackGrid"></div>
+        <div id="stackEmpty" class="empty hidden" data-i18n>No software matches that search.</div>
+      </div>
+
+      <!-- 03 · IRON -->
+      <div class="panel" id="panel-iron" role="tabpanel" aria-labelledby="tab-iron">
+        <div id="ironTiers"></div>
+        <div id="ironTotal"></div>
+        <div id="ironGroups"></div>
+        <div id="ironEmpty" class="empty hidden" data-i18n>No line item in this tier matches that search.</div>
+        <div id="ironRules"></div>
+      </div>
+
+      <!-- 04 · SNEAKERNET -->
+      <div class="panel" id="panel-sneak" role="tabpanel" aria-labelledby="tab-sneak">
+        <div id="sneakChannels"></div>
+        <div id="sneakSub"></div>
+        <div id="sneakBody"></div>
+        <div id="sneakEmpty" class="empty hidden" data-i18n>Nothing on this channel matches that search.</div>
+      </div>
+
+      <!-- 05 · PLAYBOOK -->
+      <div class="panel" id="panel-plan" role="tabpanel" aria-labelledby="tab-plan">
+        <div id="planSub"></div>
+        <div id="planBody"></div>
+      </div>
+
+    </div>
+
+    <!-- ══════════ SLIM FOOTNOTE (pinned; page never scrolls) ══════════ -->
+    <div class="footnote">
+      <span data-i18n-html><b>This page practises what it documents</b> — no CDN, no fonts from a third party, no telemetry. Save it or clone the repo and it keeps working with the cable out.</span>
+      <span class="fn-sep">·</span>
+      <span data-i18n-html>All content lives in six editable files under <code>data/</code> — fork it and make the list yours.</span>
+      <span class="fn-sep">·</span>
+      <span data-i18n>Checkboxes are stored in this browser only; clearing site data clears them.</span>
+      <span class="fn-sep">·</span>
+      <span data-i18n>Prices and sizes are dated estimates. Verify before you buy or before you size a pool.</span>
+    </div>
+
+  </div>
+
+  <!-- Detail dialog. Rows stay one line; everything else opens in here. -->
+  <div id="modal" class="modal-back" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-h">
+        <h3 id="modalTitle"></h3>
+        <button id="modalClose" class="modal-x" type="button" data-act="modal-close" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-b" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="carino-navbar.js" data-app="Offline" data-repo="Offline" defer></script>
+  <script src="carino-lang.js" defer></script>
+  <script src="i18n.js" defer></script>
+  <script src="carino-diag.js" defer></script>
+</body>
+</html>

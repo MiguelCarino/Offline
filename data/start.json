@@ -1,0 +1,152 @@
+{
+  "_comment": "Carino Offline — 00 Start: the entry panel. Five arrays and one object, all rendered on a single non-scrolling screen, so every string here is either one clause long or lives behind the detail dialog. `premise[]` is the argument (id, title, body) — only the first sentence of premise[0].body is printed, the rest opens in the modal, so keep the first sentence able to stand alone. `steps[]` is the numbered route through the site: `n` is the printed number, `what` is the one clause shown on the row, `why` is the modal prose, and `goes` MUST be one of the panel keys app.js declares in SECTIONS — grab, stack, iron, sneak, plan — or the row routes nowhere. `sections[]` mirrors those five: `key` matches the same SECTIONS key, `num`/`name`/`lead` are the card face, `what` is the clause under it. Counts on the cards are NOT stored here: app.js derives them live from the other five data files, so a card can never disagree with the list it points at. `image` describes the carino-offline bootc image published from the Custom-Images repo; `url` and `repo` point at the published image site and its source repo, `install` is the shape the switch line will take, and `note` says plainly that no registry ref is published yet — do not delete that note while it is still true. `limits[]` is the honest list of what this site does not do, one modal each. Ids are kebab-case and unique within their array. Bump `updated` (YYYY-MM) whenever the claims here are re-checked.",
+  "updated": "2026-08",
+
+  "premise": [
+    {
+      "id": "trigger",
+      "title": "What actually fails",
+      "body": "The realistic failure is administrative, not apocalyptic: a resolver ordered to NXDOMAIN a zone, a registrar suspending the domain, or transit filtering that stops a cert renewal from ever reaching Let's Encrypt. None of that touches the hardware. It only makes it unreachable, and hosting is the last part of the stack you control end to end."
+    },
+    {
+      "id": "thesis",
+      "title": "Decoupling, not hiding",
+      "body": "Nothing here is about evading anyone. It is about the media, documents, imaging and reference material actually in daily use living on hardware in the building, on a network you own, under names you define and certs you sign - so the internet becomes a sync channel instead of a dependency."
+    },
+    {
+      "id": "what-this-is",
+      "title": "What this site is",
+      "body": "A planning tool over five editable data files: what to download, what to run, what to buy, how to move it physically, and what still breaks. It recommends. It configures nothing, installs nothing, and never touches your network."
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "budget",
+      "n": "1",
+      "title": "Pick a time budget",
+      "what": "see what fits in an hour, three hours, or a long night",
+      "why": "During a shutdown the useful question is not what is important but what fits in the time left. The grab list is tiered by wall-clock download time at 300 Mbit/s, so the selector walks it in tier order and dims whatever no longer fits. Tick what you already hold and the budget frees up.",
+      "goes": "grab"
+    },
+    {
+      "id": "stack-pick",
+      "n": "2",
+      "title": "Choose what runs on it",
+      "what": "filter by offline rating and read the escape on anything that needs a refresh",
+      "why": "Full keeps working indefinitely with the cable pulled, sync works offline but rots without a periodic refresh, tethered needs someone else's cloud and is listed as a warning. Every sync and tethered entry names the way out.",
+      "goes": "stack"
+    },
+    {
+      "id": "price",
+      "n": "3",
+      "title": "Price the box",
+      "what": "switch between Lean, Balanced and Extended and watch the bill re-total",
+      "why": "Three tiers priced for the Mexican market, mid-2026, in USD with MXN derived from the file's own rate. Anything needing a vendor account to function is flagged with its escape path, or with the advice not to buy it.",
+      "goes": "iron"
+    },
+    {
+      "id": "physical",
+      "n": "4",
+      "title": "Plan the layer nobody can block",
+      "what": "discs, print, NFC and 3D printing treated as real throughput",
+      "why": "Physical media moves at 60 km/h with no DPI and no resolver to poison. This is the burn-verify-label-register pipeline, the media life expectancies, the printed artifacts and the tap-to-open tag payloads.",
+      "goes": "sneak"
+    },
+    {
+      "id": "check",
+      "n": "5",
+      "title": "Check it against what fails",
+      "what": "match each threat to the countermeasure that actually answers it",
+      "why": "Most resilience spending solves nothing, so each threat is paired with what keeps working and what does not help. The rollout is phased with exit criteria, and the list of things with no offline answer at all is stated rather than hidden.",
+      "goes": "plan"
+    }
+  ],
+
+  "sections": [
+    {
+      "key": "grab",
+      "num": "01",
+      "name": "The Grab List",
+      "lead": "The order to pull things down in, and what fits in the time you actually have.",
+      "what": "a download queue tiered by wall-clock time, with a readiness bar and exports"
+    },
+    {
+      "key": "stack",
+      "num": "02",
+      "name": "Software that survives the outage",
+      "lead": "Every entry carries an offline rating: full, sync or tethered.",
+      "what": "self-hosted software by role, each rated, each tethered one carrying its escape"
+    },
+    {
+      "key": "iron",
+      "num": "03",
+      "name": "What the box costs",
+      "lead": "A bill of materials for Mexico, mid-2026. Switch tiers to re-price the whole build.",
+      "what": "a live-totalling BOM in three budget tiers, with the no-cloud-hardware rule applied"
+    },
+    {
+      "key": "sneak",
+      "num": "04",
+      "name": "The physical layer",
+      "lead": "Optical, print, NFC, 3D printing, USB and radio treated as infrastructure with real throughput.",
+      "what": "channels, media lifetimes, burn recipes, printed artifacts and tag payloads"
+    },
+    {
+      "key": "plan",
+      "num": "05",
+      "name": "Threats, phases, rhythm",
+      "lead": "What fails, what actually keeps working, and the countermeasures that solve nothing.",
+      "what": "the threat table, the phased rollout, the drill cadence and the honest breaks list"
+    }
+  ],
+
+  "image": {
+    "name": "carino-offline",
+    "what": "a headless Fedora bootc image for the one box that keeps a LAN working when the WAN does not - names, time, trust, packages and content",
+    "why": "It is an image rather than a setup script because the work is system integration a post-install run cannot own: arbitrating port 53 against systemd-resolved, shipping the trust-store mechanism - both anchor directories and a first-boot update-ca-trust extract - so a site root dropped in before first boot is actually trusted (no root CA is baked: the root is site-specific and this is a generic image), pointing dnf at a LAN mirror instead of the internet, and holding a correct clock with no upstream NTP reachable. It pins the headless layer for the same reason carino-pbx does - an appliance administered over the network gains nothing from a desktop session.",
+    "url": "https://images.carino.systems",
+    "repo": "MiguelCarino/Custom-Images",
+    "install": "sudo bootc switch <registry>/carino-offline:latest",
+    "note": "Registry refs are not published yet, so today this is a build-it-yourself artifact: clone Custom-Images and build the image locally. The switch line above is the shape it will take, not a download that exists."
+  },
+
+  "limits": [
+    {
+      "id": "plan-only",
+      "name": "It is a plan, not a deployment",
+      "what": "Nothing here provisions, installs or configures anything.",
+      "why": "The output is a decision and a shopping list. Building it happens elsewhere."
+    },
+    {
+      "id": "no-network",
+      "name": "Almost no network",
+      "what": "Everything runs in the browser: the only fetches this page makes are its six same-origin data files, and state lives in localStorage. One request is not ours — the shared navbar's diagnostics button asks a public IP service where you are, and only if you open it.",
+      "why": "A page about surviving without the internet that phoned home would be arguing against itself, so the one call that does leave is named here rather than left for you to find in devtools."
+    },
+    {
+      "id": "numbers-age",
+      "name": "Sizes and prices age",
+      "what": "Download times assume a 300 Mbit/s sustained link and prices are Mexico street estimates; every data file carries the month it was last checked.",
+      "why": "Verify before spending. A figure with a visible date is honest; the same figure without one is a claim."
+    },
+    {
+      "id": "commands-abbreviated",
+      "name": "Install commands are abbreviated",
+      "what": "They are real but shortened to one line, and upstream flags change.",
+      "why": "Read the project's own documentation before running anything taken from a card here."
+    },
+    {
+      "id": "not-legal-advice",
+      "name": "Nothing here is legal advice",
+      "what": "Notes on data residency, invoicing and redistribution are context for a conversation with someone qualified, not a substitute for one.",
+      "why": "The compliance angle is real, but naming a Mexican norm is not the same as advising on it."
+    },
+    {
+      "id": "scope",
+      "name": "It answers denial, not coercion",
+      "what": "The scope is blocked resolvers, a seized domain, filtered transit and a dead link - not a targeted adversary with physical access, or legal compulsion.",
+      "why": "Those are not engineering problems, and designing as though they were produces bad engineering."
+    }
+  ]
+}

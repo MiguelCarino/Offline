@@ -1,0 +1,445 @@
+{
+  "_comment": "Strategy layer for offline.carino.systems. Source of truth is /home/carino/Github/OFFLINE.md sections 1, 9, 10 and 11; when that document changes, change this file in the same commit. Extend by appending objects, never by renaming an existing id (ids are kebab-case, unique across the whole file, and are used as anchors; phases[].id is the one exception — it is the 0-6 integer, and it is a key in the carino.offline.phases localStorage array, so renaming it would silently untick every existing reader's playbook). threats[].likelihood is one of high|medium|low; threats[].layer holds a layers[].id (lowercase l0-l5; the display form lives in layers[].label). breaks[].severity is one of hard (no offline answer exists), soft (degrades, recovers on reconnect) or avoidable (a purchasing or migration decision removes it). Keep breaks[].why honest: an entry that admits there is no mitigation is worth more than one that invents one. Omit any field you are not sure of rather than filling it.",
+  "updated": "2026-08",
+
+  "principles": [
+    {
+      "t": "Everything works with the WAN cable pulled",
+      "d": "Internet is an optimization, not a requirement. Anything that only works while the link is up is a feature, not infrastructure, and gets budgeted as one."
+    },
+    {
+      "t": "The same URL works online and offline",
+      "d": "Split-horizon DNS answers retina.carino.systems with a LAN address inside the building and a public one outside. Nobody learns two address books, and printed QR codes, bookmarks and NFC tags never need reprinting."
+    },
+    {
+      "t": "Lower layers never depend on higher ones",
+      "d": "L2 (the intranet) must not depend on L3 (the overlay) or above. If WireGuard, the VPS and the whole outward path die, the intranet does not notice. The dependency arrow only ever points down."
+    },
+    {
+      "t": "Decoupling, not hiding",
+      "d": "This plan handles infrastructure denial: blocked resolvers, a seized domain, filtered transit, a dead link. It does not handle a targeted adversary with physical access or legal compulsion. Those are not engineering problems and pretending otherwise produces bad engineering."
+    },
+    {
+      "t": "No cloud-tethered hardware",
+      "d": "If a device needs a vendor account to function, it does not enter the building. Checked at purchase time, because firmware rollback after the fact almost never works."
+    },
+    {
+      "t": "Physical media is a layer, not a fallback",
+      "d": "Sneakernet moves at 60 km/h with effectively infinite bandwidth and zero DPI. It is the only layer that survives everything, so it gets a production line and a registry, not a drawer of unlabelled discs."
+    }
+  ],
+
+  "layers": [
+    {
+      "id": "l0",
+      "label": "L0 Power",
+      "d": "Two UPS units with NUT for graceful shutdown, plus a 1 kWh LiFePO4 station carrying the core rack. Solar is optional and only appears in Tier C.",
+      "rule": "The shutdown order is written on paper and has been tested. A pool corrupted on the way down costs more than the outage that caused it."
+    },
+    {
+      "id": "l1",
+      "label": "L1 Compute",
+      "d": "Proxmox VE 9 on ZFS: node A primary, node B a replica in a second building receiving zfs send nightly. LXC for light services, KVM for the rest.",
+      "rule": "Anything that exists only on node A is not backed up, whatever the snapshot schedule says."
+    },
+    {
+      "id": "l2",
+      "label": "L2 Intranet",
+      "d": "MikroTik core, seven VLANs, own recursive and authoritative DNS (Technitium + Unbound), own CA (step-ca, 10-year root), own GPS-disciplined clock. This is the product; everything else is scaffolding around it.",
+      "rule": "L2 never depends on L3 or above. VLAN 40 (printers, 3D printers, IoT) and VLAN 99 (PACS) have no default gateway at all."
+    },
+    {
+      "id": "l3",
+      "label": "L3 Overlay",
+      "d": "WireGuard to an offshore VPS, Yggdrasil for DNS-independent addressing, and obfuscated transports staged in escalation order. Exists to sync mirrors and keep the public face alive under filtering.",
+      "rule": "Only for reaching out. Nothing internal may depend on it, and if it does that is a bug to file, not a configuration to document."
+    },
+    {
+      "id": "l4",
+      "label": "L4 Radio",
+      "d": "Meshtastic on 915 MHz, roughly $48 a node, 2-15 km line of sight, no infrastructure of any kind. Ham and Winlink stay optional pending the IFT licence question.",
+      "rule": "Text only. LoRa throughput is measured in bytes per second, so design the message formats for that and not for convenience."
+    },
+    {
+      "id": "l5",
+      "label": "L5 Sneakernet",
+      "d": "M-DISC and BD-R optical, USB, printed manuals and IP cards, NFC tags, 3D-printed spare parts and enclosures. Slow, unblockable, and the layer most plans skip.",
+      "rule": "Every disc carries a README, SHA256SUMS and 10% PAR2, and is read-back verified before it leaves the building. A disc that was never verified is not a backup."
+    }
+  ],
+
+  "threats": [
+    {
+      "id": "dns-block",
+      "failure": "Public DNS resolvers block or NXDOMAIN the zone",
+      "likelihood": "high",
+      "layer": "l2",
+      "works": "Own recursive resolver plus an authoritative internal zone, so resolution never leaves the building",
+      "useless": "A VPN on its own, which still has to resolve a name somewhere",
+      "note": "This is the cheapest attack to run and therefore the one to assume first."
+    },
+    {
+      "id": "dpi-sni-block",
+      "failure": "ISP deep packet inspection blocks the domain or the TLS SNI",
+      "likelihood": "high",
+      "layer": "l2",
+      "works": "Internal names, IP-literal fallback with certs that carry IP SANs, and the overlay for anything genuinely outbound",
+      "useless": "Switching to another DNS provider, which changes who answers but not who is in the path"
+    },
+    {
+      "id": "domain-seized",
+      "failure": "Domain suspended or seized by the registrar or ccTLD operator",
+      "likelihood": "medium",
+      "layer": "l2",
+      "works": "carino.internal names, an internal CA, and printed cards carrying IP literals and Yggdrasil addresses",
+      "useless": "Any countermeasure that still starts with a DNS lookup of the seized name",
+      "note": ".internal is ICANN-reserved for private use since 2024, so it will never collide with a real TLD."
+    },
+    {
+      "id": "acme-unreachable",
+      "failure": "Let's Encrypt becomes unreachable and public certs expire on schedule",
+      "likelihood": "medium",
+      "layer": "l2",
+      "works": "step-ca with a real ACME endpoint and a 10-year root; Caddy renews internally forever with no internet",
+      "useless": "Buying a long-lived public certificate, since the maximum lifetime drops to 47 days by 2029",
+      "note": "Follows any of the blocking scenarios above rather than occurring on its own."
+    },
+    {
+      "id": "clock-drift",
+      "failure": "Clocks drift after weeks offline and quietly break TLS, TOTP and DICOM timestamps",
+      "likelihood": "medium",
+      "layer": "l2",
+      "works": "A GPS/PPS hat on a Pi feeding chrony, roughly $90 for the whole kit, serving time to the whole intranet",
+      "useless": "Reaching for public NTP pools that are on the far side of the same cut",
+      "note": "The most underrated line in the whole build. Failures surface two to three weeks in, look unrelated to each other, and cost a day to diagnose."
+    },
+    {
+      "id": "transit-filtering",
+      "failure": "National transit filtering or throttling",
+      "likelihood": "medium",
+      "layer": "l3",
+      "works": "LAN-local everything, plus sneakernet for anything bulky",
+      "useless": "Paying for a faster WAN, which buys more of a pipe that is being inspected anyway"
+    },
+    {
+      "id": "internet-cut",
+      "failure": "Full internet cut, regional or national",
+      "likelihood": "low",
+      "layer": "l2",
+      "works": "Local mirrors, media, games and knowledge base already on disk, with LoRa for text between sites",
+      "useless": "Cloud backup, which is exactly as reachable as the thing that just disappeared",
+      "note": "Low probability, non-zero, and the only scenario the entire content layer exists for."
+    },
+    {
+      "id": "power-loss",
+      "failure": "Power loss",
+      "likelihood": "medium",
+      "layer": "l0",
+      "works": "UPS plus a LiFePO4 station on the core rack, with NUT triggering a tested shutdown order",
+      "useless": "A bigger server, which just drains the battery faster",
+      "note": "Medium is the honest number for Mexico, not a hedge."
+    },
+    {
+      "id": "hardware-failure",
+      "failure": "Hardware fails while the link is down",
+      "likelihood": "medium",
+      "layer": "l1",
+      "works": "Spare parts on the shelf, ZFS redundancy, and a replica at the second site",
+      "useless": "A warranty, since an RMA needs shipping and a working internet to open the ticket"
+    },
+    {
+      "id": "saas-lockout",
+      "failure": "A cloud SaaS provider locks the account out",
+      "likelihood": "medium",
+      "layer": "l1",
+      "works": "Self-hosted equivalents already running in production, with the data already in them",
+      "useless": "Planning to export the data later; the export path is the first thing a lockout removes"
+    },
+    {
+      "id": "vendor-cloud-kill",
+      "failure": "A vendor disables a device remotely or ends its cloud service",
+      "likelihood": "medium",
+      "layer": "l2",
+      "works": "Hardware chosen at purchase time for LAN-only operation, parked on VLAN 40 with no WAN route",
+      "useless": "Rolling firmware back after the fact, which is usually blocked and always late",
+      "note": "Printers and 3D printers are the usual casualties. This is why Prusa over Bambu: Bambu's LAN mode is a vendor policy, not a property of the device."
+    },
+    {
+      "id": "physical-access",
+      "failure": "Targeted adversary with physical access to the building",
+      "likelihood": "low",
+      "layer": "l0",
+      "works": "Nothing here. Encryption at rest buys minutes and an accurate inventory of what was taken",
+      "useless": "More network security, which is defending a door that is no longer the way in",
+      "note": "Explicitly out of scope. Stating it plainly is more useful than a countermeasure that would not survive contact."
+    },
+    {
+      "id": "legal-compulsion",
+      "failure": "Legal compulsion to hand over keys, data or the domain",
+      "likelihood": "low",
+      "layer": "l0",
+      "works": "Nothing here either. This plan is about infrastructure denial, not coercion",
+      "useless": "Any technical measure, since the compulsion applies to the operator rather than the system",
+      "note": "The second of the two failure modes this plan refuses to design around."
+    }
+  ],
+
+  "phases": [
+    {
+      "id": 0,
+      "name": "Escape kit",
+      "window": "Week 1-2",
+      "deliverable": "Zone file backups, git bundles of every fleet repo, registrar lock, a crown-jewel M-DISC set and a printed emergency runbook",
+      "exit": "If the domain vanished tonight, I would lose nothing permanent",
+      "tasks": [
+        "git bundle create one file per fleet repo, around twenty of them; a bundle is a single file, self-contained, and clonable with no server",
+        "Export the DNS zone file and the DNSSEC keys and store them alongside the bundles",
+        "Enable registrar lock and write down the move-the-zone-in-under-an-hour procedure while nobody is in a hurry",
+        "Export Vaultwarden, print the TOTP seeds, put the sheet in the fire safe",
+        "Burn the crown jewels to two or three M-DISC BD-R with SHA256SUMS and 10% PAR2, then verify the read-back",
+        "Print the emergency runbook: cold boot of node A, restore from cold HDD, root CA recovery, UPS shutdown order, backup codes",
+        "Buy the cold-spare Blu-ray burner now; drives are being discontinued industry-wide and the media outlives them"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Core",
+      "window": "Month 1",
+      "deliverable": "Node A, MikroTik core, VLANs, Technitium, step-ca, Caddy, GPS-NTP and the Homepage hub",
+      "exit": "Every fleet tool reachable at all three name tiers with a valid cert, WAN unplugged",
+      "tasks": [
+        "Build node A on Proxmox VE 9: mirrored NVMe for VM storage, six 16 TB drives in RAIDZ2 for bulk",
+        "Bring up the RB5009 core with the seven VLANs; 40 and 99 get no gateway at all, not merely a deny rule",
+        "Technitium authoritative for both carino.systems (split-horizon) and carino.internal, Unbound behind it as the recursor",
+        "step-ca with a 10-year root, Caddy's ACME client pointed at it, one config block per service",
+        "Issue every internal cert with its IP SAN as well as its names, so https://10.20.0.30 still works when DNS is dead",
+        "GPS/PPS hat on a Pi feeding chrony, serving time to the whole intranet",
+        "Homepage at http://hub/, laid out search-first like the public hub so muscle memory transfers",
+        "Publish the root CA fingerprint on the printed IP card before anyone has a reason to need it"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Fleet Offline Edition",
+      "window": "Month 1-2",
+      "deliverable": "carino-offline.iso, the USB folder build, a docker compose bundle, service workers and a signed release",
+      "exit": "A fresh laptop with no internet boots the USB and uses every tool",
+      "tasks": [
+        "Audit every repo for a stray absolute URL or external fetch; the fonts convention says this is already clean, so verify it rather than assume it",
+        "Add a service worker per tool for install-to-homescreen and real PWA offline behaviour",
+        "Write a Makefile that clones every fleet repo at a pinned commit and emits a Ventoy-compatible ISO",
+        "Ship tools.json with LAN-relative URLs so the hub's search routing behaves identically offline",
+        "Verify the Carino Bridge handoff over file:// and over http://hub.carino.internal; Media to Metadata and PACS to DICOM-editor are the flows that matter",
+        "Include the es, pt-BR, ja and ru locale sets; offline should not mean English-only",
+        "Sign the ISO and publish the SHA-256 in the git tag and on the printed card"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Content",
+      "window": "Month 2-3",
+      "deliverable": "Kiwix, the media stack, LANCache, selective distro mirrors and permanent game servers",
+      "exit": "A month offline is comfortable, not merely survivable",
+      "tasks": [
+        "Kiwix: Wikipedia ES and EN with images at roughly 180 GB, plus Wikimed, Wikivoyage and the Stack Exchange dump at about 100 GB",
+        "Media stack: Jellyfin, Navidrome, Audiobookshelf, Komga, Calibre-Web, Immich, Paperless-ngx, and Nextcloud with CalDAV/CardDAV so the phones stop needing Google",
+        "LANCache first, before the mirrors; it is the highest-value single container here and it makes a throttled WAN a non-issue for bulk downloads",
+        "Selective distro mirrors only: Fedora current and n-1 at about 600 GB, Debian and Ubuntu LTS at about 800 GB. Mirror the arch and releases actually in use",
+        "Pull-through caches rather than full mirrors for PyPI (devpi), npm (Verdaccio) and container images (registry:2)",
+        "Permanent servers for the libre LAN titles: 0 A.D., OpenTTD, Xonotic, Veloren, Mindustry, Wesnoth, plus headless Minecraft and Factorio",
+        "Point ArchiveBox at the bookmark bar and run it monthly; it grows past 200 GB and that is fine",
+        "If the GPU lands early: Ollama with a ~30B open-weight model and a RAG index over Kiwix, Paperless and the fleet docs"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Sneakernet line",
+      "window": "Month 3-4",
+      "deliverable": "The disc pipeline, the print artifacts, the NFC rollout and a mirrored 3D model library",
+      "exit": "20 discs and 50 NFC tags produced end to end without touching the internet",
+      "tasks": [
+        "Stand up the disc pipeline as one script: burn, PAR2 at 10%, read-back verify, sha256sum -c, label, register",
+        "UDF 2.60 for Blu-ray, ISO9660 plus Joliet and Rock Ridge for DVD and CD; README.txt and SHA256SUMS at the root of every disc without exception",
+        "Log every disc in Paperless: contents, date, hash, and who holds a copy",
+        "Print and laminate the IP card and hand one to every household and staff member; this is the break-glass artifact",
+        "Quick-start cards per fleet tool and saddle-stitched manuals for the appliance and for PACS",
+        "Encode the NFC set: NTAG215 tap-to-open stickers, a Wi-Fi join card at reception, NTAG215 asset tags linked to Topo records",
+        "Give every NFC tag a printed QR twin on the same surface; not every phone has usable NFC and every phone has a camera",
+        "Mirror the 3D model library into Forgejo with its licence files, the sliced gcode and the printer profile. A model that cannot be printed during an outage is not a model you have"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Second site and radio",
+      "window": "Month 4-5",
+      "deliverable": "Node B replication, cold HDD rotation, the Meshtastic mesh, and the offshore VPS with obfuscated transports staged",
+      "exit": "Node A destroyed, serving from site B in under 24 hours",
+      "tasks": [
+        "Decide the second site: different building, ideally a different power feed and neighbourhood. Everything in this phase blocks on that one choice",
+        "Node B online and receiving zfs send nightly",
+        "Cold rotation on two 20 TB LUKS externals, swapped monthly, one always off-premises",
+        "Four Meshtastic nodes in printed enclosures, with the antennas actually mounted high rather than left on a desk",
+        "Offshore VPS with WireGuard as the primary outbound path",
+        "Configure shadowsocks-2022, Xray-VLESS-REALITY, Hysteria2 and obfs4 bridges now, while they are still trivially downloadable",
+        "Yggdrasil on every node, with the addresses printed on the IP card; this is the domain-seized continuity path"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Drills",
+      "window": "Ongoing",
+      "deliverable": "A quarterly blackout drill with the WAN physically unplugged, and a ticket list from each one",
+      "exit": "Every failure found becomes a ticket; the drill is over only when the list is empty",
+      "tasks": [
+        "Quarterly 72-hour blackout drill, cable out at the router",
+        "Quarterly restore test from cold media, performed against the printed runbook alone",
+        "Annual disc integrity verify across the archive: sha256sum -c plus PAR2",
+        "Reprint and redistribute the IP card on any renumbering",
+        "Update OFFLINE.md after every phase completion and every drill; it is a living document or it is fiction"
+      ]
+    }
+  ],
+
+  "breaks": [
+    {
+      "thing": "CFDI 4.0 / SAT invoicing",
+      "severity": "hard",
+      "why": "Stamping a CFDI requires reaching the SAT or a PAC. There is no offline mode, and an unstamped document is not an invoice in any sense that matters legally or to a client's accountant.",
+      "mitigation": "Keep the LTE line alive specifically for this. During an outage, issue a paper record and stamp it when the link returns; the catch-up is bookkeeping, not exposure."
+    },
+    {
+      "thing": "Banking and SPEI transfers",
+      "severity": "hard",
+      "why": "SPEI clears through Banxico. There is nothing to self-host, nothing to mirror, and no degraded mode. Money simply does not move.",
+      "mitigation": "None. Hold enough cash to cover about a week of operations and accept the exposure rather than pretending a workaround exists."
+    },
+    {
+      "thing": "SMS and voice 2FA to third parties",
+      "severity": "hard",
+      "why": "The second factor lives on someone else's network. If the carrier is down, or the service only offers SMS, the account is unreachable no matter how well the building is running.",
+      "mitigation": "Move every account that supports TOTP to TOTP, with seeds in Vaultwarden and printed in the safe. Audit the SMS-only remainder once a year and close what can be closed; the rest is a known liability, not a solved problem."
+    },
+    {
+      "thing": "Windows activation and KMS",
+      "severity": "avoidable",
+      "why": "Activation phones home on its own schedule, and a workstation that deactivates in week three of an outage is a self-inflicted wound with no local fix.",
+      "mitigation": "Run Linux wherever it is a choice. Keep two or three pre-activated VMs snapshotted for the software that genuinely needs Windows, and treat the snapshot as the licence."
+    },
+    {
+      "thing": "Subscription CAD and design software",
+      "severity": "avoidable",
+      "why": "A periodic licence check is a WAN dependency wearing a costume. The software stops when the link stops, and the vendor considers that working as intended.",
+      "mitigation": "FreeCAD, Blender, Krita, Inkscape, PrusaSlicer. Where a perpetual licence still exists, buy it and archive the installer next to the key."
+    },
+    {
+      "thing": "DRM'd games and streaming media",
+      "severity": "avoidable",
+      "why": "Steam offline mode only works if you logged in recently and pre-downloaded, and streaming licences are not downloads at all. Every DRM check is a WAN dependency that was paid for.",
+      "mitigation": "Buy GOG by default; DRM-free installers archive as ordinary files. Pair Steam with LANCache and treat it as best-effort, never as foundation."
+    },
+    {
+      "thing": "Vendor firmware updates",
+      "severity": "soft",
+      "why": "Firmware lives on a vendor's site and vanishes without notice, outage or not. The failure surfaces years later, when a board needs reflashing and the download page is a 404.",
+      "mitigation": "Archive firmware per device model at purchase time, on the SMB share, next to the manual and the driver."
+    },
+    {
+      "thing": "Public CA certificates for the WAN-facing site",
+      "severity": "soft",
+      "why": "If Let's Encrypt is unreachable the public certificate expires on a schedule, and buying a long-lived one stops being an option as maximum lifetimes fall to 47 days by 2029.",
+      "mitigation": "Only the outside face is affected; the intranet runs on step-ca and does not notice. Renew through the offshore VPS over WireGuard when the direct path is filtered."
+    },
+    {
+      "thing": "Anything that was not mirrored before the cut",
+      "severity": "soft",
+      "why": "Mirrors are selective on purpose, so the first package, driver, docs set or 3D model that was not pulled is simply unavailable for the duration.",
+      "mitigation": "Keep the pull-through caches warm so ordinary work stays covered, and treat each miss as a line item for the next mirror pass rather than an emergency."
+    },
+    {
+      "thing": "Cloud-tethered appliances already in the building",
+      "severity": "avoidable",
+      "why": "A printer or 3D printer that authenticates to a vendor stops when the vendor decides, which is not the same day the network does. By then the purchase decision is years old and irreversible.",
+      "mitigation": "VLAN 40 with no WAN route, and refuse at purchase time anything that cannot live there. If it needs an account to function, it does not enter the building."
+    }
+  ],
+
+  "drills": [
+    {
+      "id": "blackout",
+      "name": "72-hour blackout drill",
+      "cadence": "quarterly",
+      "how": "WAN physically unplugged, no exceptions",
+      "pass": "Every failure found becomes a ticket; the drill is over only when the list is empty",
+      "steps": [
+        "Pull the cable at the router rather than writing a firewall rule; a rule you wrote is a rule you can have written wrong",
+        "Work a normal three days: documents, imaging, media, games, and an invoice issued on paper",
+        "Log every reach for a phone's LTE as a failure, including the small ones nobody would have mentioned",
+        "Check clocks at hour 72; without GPS this is the thing actually being tested",
+        "Convert each failure into a ticket before the cable goes back in, while the detail is still fresh"
+      ]
+    },
+    {
+      "id": "restore-test",
+      "name": "Restore from cold media",
+      "cadence": "quarterly",
+      "how": "Restore a real dataset onto empty hardware using the cold HDD and the printed runbook only",
+      "pass": "An untested backup is a rumor. It passes when the data comes back and nobody had to open a laptop for instructions",
+      "steps": [
+        "Pick a dataset that would actually hurt to lose, not the smallest one",
+        "Restore onto a wiped spare, never over the original",
+        "Time it, and record the number in the runbook so the next estimate is honest",
+        "Verify with restic check --read-data rather than trusting that the files listed"
+      ]
+    },
+    {
+      "id": "dns-dead",
+      "name": "DNS-is-dead card drill",
+      "cadence": "semiannual",
+      "how": "Point a workstation's resolver at nothing and reach three services using only the printed IP card",
+      "pass": "All three reached, with no certificate warning, which also proves the IP SANs were issued correctly",
+      "steps": [
+        "Hand the card to someone who did not build the network and watch where they hesitate",
+        "Include one Yggdrasil address in the attempt, since that is the domain-seized path",
+        "Reprint the card if any address, fingerprint or SSID on it is stale"
+      ]
+    },
+    {
+      "id": "site-failover",
+      "name": "Node A cold-loss failover",
+      "cadence": "annual",
+      "how": "Power node A down completely and bring the fleet up on node B at the second site",
+      "pass": "Serving again in under 24 hours, using the runbook and nothing that was stored only on node A",
+      "steps": [
+        "Shut node A down cold rather than migrating gracefully",
+        "Promote the node B datasets and re-point DNS at the second site",
+        "Note every credential, script or note that turned out to live only on node A and move it"
+      ]
+    },
+    {
+      "id": "disc-verify",
+      "name": "Optical archive verify",
+      "cadence": "annual",
+      "how": "Read every archived disc back and check it against its own SHA256SUMS and PAR2 set",
+      "pass": "No unrecoverable errors; anything PAR2 had to repair gets reburned immediately rather than noted",
+      "steps": [
+        "Verify on the spare burner as well as the primary, which also tests that the spare still works",
+        "Reconcile against the disc registry and chase any disc listed but not on the shelf",
+        "Reburn the crown-jewel set if the media is past ten years, regardless of whether it read cleanly"
+      ]
+    }
+  ],
+
+  "cadence": [
+    { "task": "Refresh distro mirrors", "every": "monthly" },
+    { "task": "ZFS scrub and restic check --read-data", "every": "monthly" },
+    { "task": "ArchiveBox crawl of the bookmark bar", "every": "monthly" },
+    { "task": "Cold HDD swap, one copy always off-premises", "every": "monthly" },
+    { "task": "Restore test from cold media", "every": "quarterly" },
+    { "task": "Blackout drill, WAN unplugged for 72 hours", "every": "quarterly" },
+    { "task": "Crown-jewel M-DISC burn", "every": "quarterly" },
+    { "task": "Disc integrity verify across the archive", "every": "annually" },
+    { "task": "Rebuild and re-sign the Fleet Offline Edition ISO", "every": "on any fleet release" },
+    { "task": "Reprint and redistribute the IP card", "every": "on any renumbering" },
+    { "task": "Archive vendor firmware and drivers for a new device", "every": "at purchase" }
+  ]
+}

@@ -1,0 +1,838 @@
+{
+  "_comment": "Carino Offline — L5 sneakernet: the physical distribution layer. Five arrays, all keyed by a kebab-case `id` that must be unique across the whole file. Every `channel` value must match a `channels[].id`. `recipes[].steps[].cmd` is optional and must be a command that has actually been run on this hardware — omit it rather than invent a flag; a wrong flag in a document about working without the internet is worse than no command. `uses` entries carry `tag`+`payload` when channel is `nfc`, and `material`+`time` when channel is `3dprint`; keep that split if you add channels. Prices are Mexico retail estimates, USD at ~18.5 MXN — bump `updated` (YYYY-MM) whenever you refresh them, it is shown on the page. Never add a URL you have not opened.",
+  "updated": "2026-08",
+
+  "channels": [
+    {
+      "id": "optical",
+      "label": "Optical",
+      "icon": "💿",
+      "blurb": "The only consumer medium that is write-once by physics rather than by policy. A burned disc cannot be silently rewritten by malware, by a sync client, or by a court order served on someone else. Five terabytes on a 50-disc spindle driven across town in half an hour is about 22 Gbit/s of effective throughput, and no DPI box on the route ever sees it.",
+      "throughput": "100 GB per BD-R XL; a 50-disc spindle is 5 TB in a shoebox. Burning is the bottleneck: ~1.5 h per 100 GB disc at 4x.",
+      "lifespan": "10-20 yr stored dark, dry and vertical (M-DISC: decades)",
+      "bestFor": "immutable archive, crown jewels, wide one-way distribution",
+      "worstFor": "anything you need to rewrite, and anything you need this afternoon"
+    },
+    {
+      "id": "print",
+      "label": "Print",
+      "icon": "🖨️",
+      "blurb": "Paper is the only format in this document that needs no power, no driver, no key and no working clock. It is also the only one a panicking human can use at 3 a.m. Everything that has to survive the failure of everything else — addresses, fingerprints, boot order, recovery shares — ends up here, laser-printed, because fused toner outlives dye ink by decades.",
+      "throughput": "~3 KB of dense text per A4 page; the useful payload of an IP card is about 40 lines",
+      "lifespan": "decades on laser toner + acid-free paper; inkjet dye fades in years under light",
+      "bestFor": "break-glass procedures, addresses, fingerprints, anything read under stress",
+      "worstFor": "anything that changes weekly, and anything larger than a few kilobytes"
+    },
+    {
+      "id": "nfc",
+      "label": "NFC",
+      "icon": "📇",
+      "blurb": "NFC is not storage, it is a shortcut layer. 500 bytes on a tag is enough to carry a URL, a Wi-Fi credential or an asset ID, which is exactly what turns a set of IP addresses into something that feels like a product. Every tag gets a printed QR twin on the same surface: not every phone has usable NFC, every phone has a camera, and the redundancy costs nothing.",
+      "throughput": "144-888 bytes per tag; ~100 tags/hour hand-encoded and read back on an ACR122U",
+      "lifespan": "~10 yr data retention, ~100k write cycles (NXP NTAG spec); the adhesive fails first",
+      "bestFor": "tap-to-open, tap-to-join, asset identity, physical tokens",
+      "worstFor": "secrets of any kind — a tag is readable by every phone that walks past it"
+    },
+    {
+      "id": "3dprint",
+      "label": "3D printing",
+      "icon": "⚙️",
+      "blurb": "Not a hobby line item: it is the spare-parts and packaging supply chain for when imports are slow, expensive or blocked. A bracket that stops a client's machine costs 40 g of PETG and two hours instead of a three-week wait on a part number that may be discontinued. This is the one item in the BOM that pays for itself in service calls rather than in resilience.",
+      "throughput": "20-40 g/h of PETG; a drive caddy is ~60 g and ~2 h, a Meshtastic enclosure ~35 g and ~1.5 h",
+      "lifespan": "PETG/ASA parts outlive the hardware they hold; PLA softens around 60 °C and has no business inside a rack",
+      "bestFor": "brackets, caddies, enclosures, jigs, packaging, discontinued clips",
+      "worstFor": "anything load-bearing, anything precise to under 0.2 mm, anything that must be food- or body-safe"
+    },
+    {
+      "id": "usb",
+      "label": "USB",
+      "icon": "💾",
+      "blurb": "The fastest way to move a working system into someone's hands, and the worst way to keep one. Flash retention is a charge-decay problem, not a mechanical one: an unpowered stick in a drawer is a countdown, and cheap controllers make it a shorter one than the datasheet suggests. Treat sticks as distribution, never as the archive tier — the archive is on the disc.",
+      "throughput": "~200 MB/s realistic sustained write on a decent USB 3.2 stick; 1 TB fits in a coin pocket",
+      "lifespan": "1-5 yr unpowered before it needs re-verification; assume less on a stick that has been written hard",
+      "bestFor": "the Fleet Offline Edition, Ventoy multi-boot, handing someone a whole environment",
+      "worstFor": "long-term archive, and anything you only have one copy of"
+    },
+    {
+      "id": "radio",
+      "label": "Radio",
+      "icon": "📻",
+      "blurb": "LoRa carries coordination, not content. At 237 bytes per Meshtastic packet you will never move a file, but you can say 'the link is down, bring the disc, I am at the second site' across 10 km with no infrastructure at all and no one's permission. At about $48 a node delivered — board, antenna and enclosure — it is the cheapest genuine resilience in the whole plan.",
+      "throughput": "237-byte max payload per Meshtastic packet; effectively kilobytes per hour, shared across the mesh",
+      "lifespan": "node lifetime; the 18650 cell and the UV-cracked enclosure are what fail, not the radio",
+      "bestFor": "telling people where to meet and what to carry when nothing else works",
+      "worstFor": "data of any size, and anything you would mind a stranger with a $30 node reading"
+    }
+  ],
+
+  "media": [
+    {
+      "id": "mdisc-bd",
+      "channel": "optical",
+      "name": "M-DISC BD-R 100 GB",
+      "cap": "100 GB",
+      "life": "decades (100 yr is an accelerated-aging extrapolation, not observed data)",
+      "cost": "~20 USD/disc",
+      "costPerTB": "~200 USD",
+      "use": "Crown jewels: fleet git bundles, encrypted key material, DNS zone files, the current Fleet Offline Edition ISO",
+      "note": "The recording layer is inorganic, so there is no dye to fade — the realistic failure mode is delamination or the polycarbonate itself, not data rot. Costs 50% more than BD-R XL for a set that is 2-3 discs total. There is no argument for economising here."
+    },
+    {
+      "id": "bdr-xl",
+      "channel": "optical",
+      "name": "BD-R XL 100 GB (HTL)",
+      "cap": "100 GB",
+      "life": "10-20 yr stored dark and dry",
+      "cost": "~12 USD/disc",
+      "costPerTB": "~120 USD",
+      "use": "Bulk library distribution, media sets, quarterly archive rotations",
+      "note": "HTL (inorganic) only — LTH discs are cheaper, age worse and some drives write them badly. Standardise on one SKU and buy it by the spindle so every disc in the registry burns at the same speed with the same firmware behaviour."
+    },
+    {
+      "id": "bdr-25",
+      "channel": "optical",
+      "name": "BD-R 25 GB",
+      "cap": "25 GB",
+      "life": "10-20 yr",
+      "cost": "~1.20 USD/disc",
+      "costPerTB": "~48 USD",
+      "use": "Fleet Offline Edition ISO, single-title handouts, one-study medical discs",
+      "note": "The cheapest optical byte and the right default for anything handed to another person. Burns in ~20 min, fits the whole fleet with room for PAR2, and costs little enough that you never ask for it back."
+    },
+    {
+      "id": "dvd-r",
+      "channel": "optical",
+      "name": "DVD-R 4.7 GB",
+      "cap": "4.7 GB",
+      "life": "5-15 yr (organic dye — keep it out of the light)",
+      "cost": "~0.60 USD/disc",
+      "costPerTB": "~128 USD",
+      "use": "Client handouts, manuals, patient studies, anything that must read on a machine from 2009",
+      "note": "Universally readable, which is the entire point. Still the correct format for a clinic handout because the receiving computer is the constraint, not the capacity."
+    },
+    {
+      "id": "cd-r",
+      "channel": "optical",
+      "name": "CD-R 700 MB",
+      "cap": "700 MB",
+      "life": "5-15 yr",
+      "cost": "~0.30 USD/disc",
+      "costPerTB": "~430 USD",
+      "use": "Legacy medical equipment, tiny bootables, audio",
+      "note": "Kept in stock for one reason: imaging and lab hardware in Mexican clinics still ships studies on CD, and some of it will not read a DVD-R. Absurd cost per terabyte, irrelevant at 700 MB."
+    },
+    {
+      "id": "usb-stick",
+      "channel": "usb",
+      "name": "USB 3.2 flash drive 128 GB",
+      "cap": "128 GB",
+      "life": "1-5 yr unpowered; re-verify annually",
+      "cost": "~12 USD",
+      "costPerTB": "~94 USD",
+      "use": "Ventoy multi-boot stick, Fleet Offline Edition, on-site delivery",
+      "note": "Buy two of every stick you deploy and burn the same content to a BD-R 25. The stick is the convenient copy; the disc is the copy that is still readable when the stick's controller dies without warning, which is how they die."
+    },
+    {
+      "id": "usb-ssd",
+      "channel": "usb",
+      "name": "External NVMe SSD 1 TB",
+      "cap": "1 TB",
+      "life": "1-5 yr unpowered; years if it gets plugged in and scrubbed",
+      "cost": "~75 USD",
+      "costPerTB": "~75 USD",
+      "use": "Moving mirror deltas and media libraries between sites at 900 MB/s",
+      "note": "This is the sneakernet workhorse for bulk sync between node A and node B — a 1 TB delta is 20 minutes of copy and a 30-minute drive, versus days on a throttled WAN. It is transport, not storage: nothing lives here that does not live somewhere else."
+    },
+    {
+      "id": "ext-hdd",
+      "channel": "usb",
+      "name": "External HDD 20 TB (cold rotation)",
+      "cap": "20 TB",
+      "life": "5+ yr cold; spin it up quarterly",
+      "cost": "~330 USD",
+      "costPerTB": "~17 USD",
+      "use": "The offsite copy in 3-2-1-1-0 — two drives, monthly swap, one always out of the building",
+      "note": "Cheapest bulk medium by an order of magnitude, and the only one here that dies from sitting still. Verify CMR before buying: an SMR drive will make a restic restore or a resilver take days. LUKS it before the first byte goes on."
+    },
+    {
+      "id": "ntag213",
+      "channel": "nfc",
+      "name": "NTAG213 sticker (25 mm)",
+      "cap": "144 bytes user memory",
+      "life": "~10 yr; the adhesive gives up first",
+      "cost": "~0.20 USD",
+      "costPerTB": "not a storage medium",
+      "use": "Asset tags on every device, filament spools, bin labels",
+      "note": "144 bytes holds one URI and nothing else — an inventory URL fits, an inventory URL plus a Wi-Fi credential does not. Use the 213 anywhere the payload is a single link and the tag is disposable — though the BOM in section 03 stocks none, standardising on 215 stickers instead, which take the same single-URI payload for a few cents more."
+    },
+    {
+      "id": "ntag215-card",
+      "channel": "nfc",
+      "name": "NTAG215 PVC card",
+      "cap": "504 bytes user memory",
+      "life": "~10 yr, ~100k writes",
+      "cost": "~0.60 USD",
+      "costPerTB": "not a storage medium",
+      "use": "Reception Wi-Fi card, tap-to-open tools, business cards",
+      "note": "504 bytes is the sweet spot: a Wi-Fi credential record plus a URI plus a text note still fits. PVC survives a pocket; the sticker version does not survive a wipe-down."
+    },
+    {
+      "id": "ntag216-disc",
+      "channel": "nfc",
+      "name": "NTAG216 disc tag (30 mm)",
+      "cap": "888 bytes user memory",
+      "life": "~10 yr",
+      "cost": "~0.70 USD",
+      "costPerTB": "not a storage medium",
+      "use": "Loaner hardware, appliance entitlement tokens, anything carrying a signature",
+      "note": "The only tag here with room for a URI plus a signed token plus human-readable text. Reserve it for the cases that actually need the bytes — at three times the price of a 213 it is not the default."
+    }
+  ],
+
+  "recipes": [
+    {
+      "id": "disc-build",
+      "channel": "optical",
+      "name": "Standard disc build",
+      "why": "Every disc follows the same eight steps, with no exceptions, because a disc is only worth burning if a stranger can verify it in ten years without asking you anything. Skipping the hash step saves four seconds and turns the disc into a rumour; skipping the read-back verify means you find out the burn failed on the day you needed it.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Stage the payload in one directory",
+          "detail": "Everything that goes on the disc lives under a single build root, named for the disc. Nothing is added after hashing — if it was not there when SHA256SUMS was written, it does not ship.",
+          "cmd": "mkdir -p build/CARINO-2026Q3 && rsync -a --exclude '.git' src/ build/CARINO-2026Q3/payload/"
+        },
+        {
+          "n": 2,
+          "do": "Write README.txt at the root",
+          "detail": "Contents, build date, source git commit, the SHA-256 of the finished ISO, contact, and how to restore. Written for someone in 2040 with no context, no internet and no idea who you are. Plain ASCII, CRLF, no Markdown — it will be read in Notepad."
+        },
+        {
+          "n": 3,
+          "do": "Hash everything",
+          "detail": "Deterministic order so two builds of the same payload produce an identical SHA256SUMS. This file is the disc's own witness.",
+          "cmd": "cd build/CARINO-2026Q3 && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS"
+        },
+        {
+          "n": 4,
+          "do": "Add PAR2 recovery at 10%",
+          "detail": "Ten percent redundancy recovers a scratch, a fingerprint, or the slow edge rot that takes out the outer tracks first. It costs 10 GB on a 100 GB disc, which is the cheapest insurance in this document. par2cmdline's -R recurses; if your build lacks it, pass an explicit file list.",
+          "cmd": "cd build/CARINO-2026Q3 && par2 create -r10 -n1 -R -- recovery.par2 payload/"
+        },
+        {
+          "n": 5,
+          "do": "Master the image",
+          "detail": "ISO9660 level 3 + Rock Ridge + Joliet reads on everything and handles files over 4 GiB via multi-extent. Note the trap: Windows' CDFS does not read multi-extent files reliably, so if a single payload file exceeds 4 GiB and a Windows machine has to read it, split it first or master with genisoimage -udf instead. xorriso does not write UDF at all; true UDF 2.60 needs mkudffs and a separate image.",
+          "cmd": "xorriso -as mkisofs -iso-level 3 -R -J -joliet-long -V CARINO_2026Q3 -o CARINO-2026Q3.iso build/CARINO-2026Q3/"
+        },
+        {
+          "n": 6,
+          "do": "Burn and close the disc",
+          "detail": "-dvd-compat finalises: no further sessions, maximum compatibility with drives that are not yours. Burn at 4x, not at maximum — the drive's own error rates are meaningfully better and you are not in a hurry.",
+          "cmd": "growisofs -dvd-compat -speed=4 -Z /dev/sr0=CARINO-2026Q3.iso"
+        },
+        {
+          "n": 7,
+          "do": "Read back and compare",
+          "detail": "Read exactly as many 2048-byte sectors as the image contains — the drive pads beyond the image and the padding will change the hash. 'Burn completed successfully' is a statement about the write buffer, not about the disc. Ideally verify in a different drive than the one that burned it.",
+          "cmd": "sha256sum CARINO-2026Q3.iso && dd if=/dev/sr0 bs=2048 count=$(( $(stat -c%s CARINO-2026Q3.iso) / 2048 )) status=progress | sha256sum"
+        },
+        {
+          "n": 8,
+          "do": "Label and register",
+          "detail": "Title, date, and the first 8 hex of the ISO hash on the disc face, plus a QR to the intranet index. Then one row in the registry: what, when, full hash, how many copies exist and who holds them. An unregistered disc is landfill in five years because nobody will dare trust it."
+        }
+      ]
+    },
+    {
+      "id": "par2-recovery",
+      "channel": "optical",
+      "name": "Recovering a degraded disc",
+      "why": "The annual verify exists to find bad discs while the second copy is still good. When one fails, the order of operations matters: every retry on a marginal disc heats it and costs you reads, so image first and think afterwards. Ten percent redundancy covers roughly ten percent loss — past that, the answer is the other copy in the other building, which is the whole reason there are two.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Try a different drive before anything else",
+          "detail": "Optical pickups vary enough that a disc unreadable in one drive reads cleanly in another. This is the single highest-yield step and it costs nothing. Keep the cold-spare burners for exactly this."
+        },
+        {
+          "n": 2,
+          "do": "Image what you can with ddrescue",
+          "detail": "Two passes: first fast and non-scraping to capture everything easy, then direct access with retries on the gaps. The map file makes the second pass resume instead of restart.",
+          "cmd": "ddrescue -b 2048 -n -r0 /dev/sr0 disc.iso disc.map && ddrescue -b 2048 -d -r3 /dev/sr0 disc.iso disc.map"
+        },
+        {
+          "n": 3,
+          "do": "Mount the image read-only and find the damage",
+          "detail": "sha256sum -c names the broken files instead of leaving you to guess. Work from the image, never from the disc.",
+          "cmd": "mount -o loop,ro disc.iso /mnt/disc && cd /mnt/disc && sha256sum -c SHA256SUMS"
+        },
+        {
+          "n": 4,
+          "do": "Repair from the PAR2 set",
+          "detail": "par2 needs somewhere writable, so copy out first. It will reconstruct the damaged files if the loss is within the redundancy you burned.",
+          "cmd": "cp -a /mnt/disc/. /work/ && cd /work && par2 repair recovery.par2"
+        },
+        {
+          "n": 5,
+          "do": "Re-verify, re-burn, retire",
+          "detail": "Run SHA256SUMS again on the repaired tree, burn a fresh disc through disc-build, and mark the old one dead in the registry — physically snap it. A disc that failed once will be trusted by someone if you leave it on the shelf."
+        }
+      ]
+    },
+    {
+      "id": "ventoy-stick",
+      "channel": "usb",
+      "name": "Building the Ventoy delivery stick",
+      "why": "One stick that boots every ISO you own, plus a data partition holding the fleet folder, is the artifact you actually hand to a client. Ventoy is worth the dependency because the alternative is re-flashing a stick per ISO, and a stick you have to re-flash is a stick you will not carry. Verify the Ventoy release itself before installing it — you are making it the trust anchor for everything that boots from it.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Verify the release, then archive it",
+          "detail": "Ventoy ships a sha256.txt in its release tarball. Check it, then keep the verified tarball in the mirror — the day you need to rebuild a stick is not the day to be downloading a bootloader.",
+          "cmd": "sha256sum -c sha256.txt"
+        },
+        {
+          "n": 2,
+          "do": "Install, reserving space for a second partition",
+          "detail": "-i installs and destroys the disk; -r reserves megabytes at the end for a partition you control. -u upgrades Ventoy later without touching the data partition, which is how you keep sticks current in the field.",
+          "cmd": "sudo sh Ventoy2Disk.sh -i -r 8192 /dev/sdX"
+        },
+        {
+          "n": 3,
+          "do": "Keep the data partition exFAT",
+          "detail": "The default. It takes ISOs over 4 GB and reads on Windows, macOS and Linux without a driver — which matters because you do not control the machine at the other end. NTFS also works and is faster on Windows, but stops being universal."
+        },
+        {
+          "n": 4,
+          "do": "Copy the ISOs and verify after the copy",
+          "detail": "Flash writes lie until the buffer flushes. Copy, sync, then hash from the stick — not from the source.",
+          "cmd": "rsync -av --progress iso/ /run/media/$USER/Ventoy/ && sync && cd /run/media/$USER/Ventoy && sha256sum -c SHA256SUMS"
+        },
+        {
+          "n": 5,
+          "do": "Configure the menu",
+          "detail": "A ventoy/ventoy.json on the data partition sets menu aliases, ordering, theme and per-ISO options. Name entries the way a stressed person reads them — 'Carino Offline Edition 2026Q3', not 'carino-offline-2026Q3-x86_64-final2.iso'."
+        },
+        {
+          "n": 6,
+          "do": "Build two, burn one",
+          "detail": "Two identical sticks and one BD-R 25 with the same payload. The stick is for speed, the disc is for the case where the stick was left in a hot car for a summer, which is how most of them die."
+        }
+      ]
+    },
+    {
+      "id": "nfc-encode",
+      "channel": "nfc",
+      "name": "Bulk NFC tag encoding",
+      "why": "Tags get encoded in batches on the bench, never one at a time at the wall — the per-tag cost is entirely in the setup. The two rules that matter: read every tag back before it leaves the bench, and lock nothing until you have. Lock bits are one-way, and a locked tag with a typo in the hostname is a 60-centavo lesson multiplied by 200.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Get the reader talking",
+          "detail": "The classic ACR122U failure is the kernel claiming the device first. Blacklist pn533_usb, pn533 and nfc, then confirm with libnfc before you blame the tags.",
+          "cmd": "nfc-list"
+        },
+        {
+          "n": 2,
+          "do": "Build the NDEF payload",
+          "detail": "ndeflib encodes the message; nfcpy writes it. Generating the bytes separately means you can diff two payloads and keep them in the repo next to the label artwork.",
+          "cmd": "python3 -c 'import ndef,sys; sys.stdout.buffer.write(b\"\".join(ndef.message_encoder([ndef.UriRecord(\"https://retina.carino.systems/\")])))' > uri.ndef"
+        },
+        {
+          "n": 3,
+          "do": "Write the batch",
+          "detail": "nfcpy's tagtool example in --loop mode writes every tag presented until you stop it. This is the whole bulk workflow: one command, a stack of tags, ten seconds each.",
+          "cmd": "python3 examples/tagtool.py --loop load uri.ndef"
+        },
+        {
+          "n": 4,
+          "do": "Handle Wi-Fi records honestly",
+          "detail": "A Wi-Fi credential is a WSC record (application/vnd.wfa.wsc), built with ndef.wifi.WifiSimpleConfigRecord. Android joins from it; iOS does not honour NFC Wi-Fi provisioning at all. On a reception card the printed QR twin is not redundancy, it is the iPhone path — and a Wi-Fi QR is understood by both."
+        },
+        {
+          "n": 5,
+          "do": "Read back every tag",
+          "detail": "tagtool show dumps what is actually on the tag rather than what you meant to put there. Do this before locking, on every tag, including the ones you are sure about.",
+          "cmd": "python3 examples/tagtool.py show"
+        },
+        {
+          "n": 6,
+          "do": "Lock only production tags",
+          "detail": "nfcpy's Tag.protect() sets the static lock bits and is irreversible. Lock the reception card and the asset tags; leave desk stickers writable, because the URL scheme will change once and you will want the tags back."
+        },
+        {
+          "n": 7,
+          "do": "Print and apply the QR twin",
+          "detail": "Same URI, same surface, applied at the same time. A tag without its twin will be replaced by a handwritten note within a year."
+        }
+      ]
+    },
+    {
+      "id": "model-mirror",
+      "channel": "3dprint",
+      "name": "Mirroring the 3D model library",
+      "why": "Printables, Thingiverse and GrabCAD are internet services, and a model you cannot print during an outage is not a model you have. The mirror is not a download folder: it is source geometry, the licence, the exact slicer profile and the sliced gcode, versioned together, because a bare STL six months later is a shape whose print settings you have forgotten.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Fix the directory layout before the first model",
+          "detail": "One directory per model: source/ (STEP, FreeCAD, SCAD), mesh/ (STL, 3MF), gcode/ (one per printer+material), profile/ (the exported slicer config), LICENSE, and a README with the settings that actually worked — nozzle, layer height, infill, orientation, whether it needed supports."
+        },
+        {
+          "n": 2,
+          "do": "Track the binaries in LFS",
+          "detail": "Meshes and gcode are large, binary and re-exported often; without LFS the repo doubles in size every month.",
+          "cmd": "git lfs install && git lfs track '*.stl' '*.3mf' '*.gcode' '*.step' && git add .gitattributes"
+        },
+        {
+          "n": 3,
+          "do": "Pull the licence with the model, every time",
+          "detail": "Non-commercial licences are common on model sites and most of these parts end up inside client hardware. A model without its licence file cannot be shipped in a machine you invoice for, so it is worth less than nothing — it is a liability that looks like an asset."
+        },
+        {
+          "n": 4,
+          "do": "Record the slicer version",
+          "detail": "A gcode file is only meaningful against a specific printer, nozzle and firmware. Pin the slicer version in the README and archive the slicer installer alongside the mirror; the profile format changes between major releases."
+        },
+        {
+          "n": 5,
+          "do": "Bundle to the disc set, including the LFS objects",
+          "detail": "The trap everyone hits: git bundle does not contain LFS objects, so a bundle of an LFS repo restores as a tree of pointer files. Fetch everything first, then archive the LFS store next to the bundle.",
+          "cmd": "git lfs fetch --all && git bundle create models-$(date +%Y%m).bundle --all && tar czf models-lfs-$(date +%Y%m).tar.gz .git/lfs/objects"
+        },
+        {
+          "n": 6,
+          "do": "Verify by printing, once a year",
+          "detail": "Pick one part from the mirror, re-slice it from source on the machine you own, and print it. That tests the geometry, the profile, the filament and your memory of the process at the same time — which is more than a checksum tests."
+        }
+      ]
+    },
+    {
+      "id": "label-workflow",
+      "channel": "print",
+      "name": "Asset labels and disc faces",
+      "why": "A label is a promise that the inventory is current. The failure mode is not the printer, it is the label printed on Tuesday for a record created on Friday — so the rule is that the label and the inventory row happen in the same sitting or neither happens. Everything here runs on VLAN 40 with no WAN, because label printers and disc printers are exactly the class of device that grows a cloud dependency in a firmware update.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Fix the ID scheme first",
+          "detail": "One namespace, zero-padded, never reused: CS-0042. The manufacturer serial is a field on the record, not the ID — you will re-serialise a machine and you will never re-issue an asset number."
+        },
+        {
+          "n": 2,
+          "do": "Generate the QR",
+          "detail": "Error-correction level M survives a scuffed label; use H on anything that lives on a surface that gets wiped down with alcohol. Keep the URI short — a long URL forces a denser symbol that a phone camera struggles with at label size.",
+          "cmd": "qrencode -l M -s 6 -m 2 -o CS-0042.png 'http://topo.carino.internal/#asset/CS-0042'"
+        },
+        {
+          "n": 3,
+          "do": "Compose the label",
+          "detail": "Hostname, IP, MAC, purchase date, QR. 62 mm continuous tape at 300 dpi is 696 px wide, which is the canvas to design against. Hostname big enough to read from the aisle; the rest can be small."
+        },
+        {
+          "n": 4,
+          "do": "Print over the network, not over a vendor app",
+          "detail": "brother_ql speaks raster directly to the printer's port 9100. No driver, no Brother software, no account, and it works identically from a script on the server.",
+          "cmd": "brother_ql -b network -m QL-820NWB -p tcp://10.40.0.21:9100 print -l 62 CS-0042.png"
+        },
+        {
+          "n": 5,
+          "do": "Know the disc-printing limitation before you buy printable discs",
+          "detail": "Direct-to-disc printing on the EcoTank is a Windows/macOS path — Epson's Print CD is what drives the tray, and the Linux escpr driver does not expose it. The honest options are an offline Windows VM dedicated to the job, or printing circular paper inserts and skipping printable media entirely. Never use a solvent marker on a disc face; the lacquer is thinner than the label side suggests."
+        },
+        {
+          "n": 6,
+          "do": "Register in the same sitting",
+          "detail": "Label printed, record created, photo of the machine attached, same hour. A drawer of pre-printed labels is how an inventory starts lying to you."
+        }
+      ]
+    },
+    {
+      "id": "crown-jewels",
+      "channel": "optical",
+      "name": "Pressing the crown-jewel set",
+      "why": "This is the quarterly ritual that makes the rest of the plan optional. The set is small — every fleet repo as a git bundle, the CA root, the password export, the zone files, the current ISO — and it fits on two or three M-DISCs. There is no excuse for not having it on a shelf, and no version of losing everything else that is unrecoverable if you do.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Bundle every repo",
+          "detail": "A git bundle is one file, self-contained and clonable, with the full history — which is the property that makes it the right archive format for source. One per repo, named with the date.",
+          "cmd": "for r in ~/Github/*/; do git -C \"$r\" bundle create \"/archive/$(basename $r)-$(date +%Y%m).bundle\" --all; done"
+        },
+        {
+          "n": 2,
+          "do": "Clone from the bundle before trusting it",
+          "detail": "git bundle verify checks the prerequisites; an actual clone checks reality. A bundle you have never cloned from is a rumour, and this takes thirty seconds per repo.",
+          "cmd": "git bundle verify repo-202608.bundle && git clone repo-202608.bundle /tmp/restore-test"
+        },
+        {
+          "n": 3,
+          "do": "Export the secrets",
+          "detail": "Vaultwarden export, step-ca root key, DNS zone files, TOTP seeds. Assemble the tarball on an encrypted filesystem and never let the plaintext touch a spinning disk you will later throw away."
+        },
+        {
+          "n": 4,
+          "do": "Encrypt with a passphrase, not a key file",
+          "detail": "The key file is the thing you will lose. A passphrase you can memorise, or split and print, survives the loss of every machine — which is the scenario this set exists for.",
+          "cmd": "age -p -o secrets-202608.age secrets-202608.tar"
+        },
+        {
+          "n": 5,
+          "do": "Split the passphrase across people and places",
+          "detail": "Two-of-three Shamir shares: one in the safe, one at the second site, one with a person you trust. Any two reconstruct it, any one alone is useless. Print the shares on the laser printer — a share on a USB stick has the same failure mode as the thing it protects.",
+          "cmd": "ssss-split -t 2 -n 3"
+        },
+        {
+          "n": 6,
+          "do": "Burn two M-DISCs, store them apart",
+          "detail": "Run disc-build for both. One in the fire safe, one at the second site. Same content, same hash, different buildings — the second copy is what makes the ten-percent PAR2 margin an acceptable bet rather than a gamble."
+        },
+        {
+          "n": 7,
+          "do": "Verify one disc a year, restore one repo a quarter",
+          "detail": "Read the oldest disc back in full annually and clone one repo from a bundle every quarter. The point is not the disc — it is confirming that you still remember how, that the drive still works, and that the passphrase is still the one you think it is."
+        }
+      ]
+    },
+    {
+      "id": "mesh-bringup",
+      "channel": "radio",
+      "name": "Bringing up the Meshtastic mesh",
+      "why": "Four nodes is the smallest mesh that is worth owning: one at each site, one in the vehicle, one spare on the shelf with a charged cell. The configuration takes twenty minutes and the hard part is none of it — the hard part is that a mesh nobody has ever used will not be used on the day it matters, which is why the last step is a schedule and not a command.",
+      "steps": [
+        {
+          "n": 1,
+          "do": "Set the region before anything else",
+          "detail": "Nothing transmits until the region is set, and the region is what pins the frequency plan and duty cycle. Mexico's 915 MHz ISM allocation lines up with the US plan, so US is the setting — confirm against the current IFT allocation rather than trusting this line, because band plans outlive documents.",
+          "cmd": "meshtastic --set lora.region US"
+        },
+        {
+          "n": 2,
+          "do": "Create one private channel with a random key",
+          "detail": "The default public channel is exactly that. Generate a fresh pre-shared key rather than typing one you can remember; anyone within ten kilometres with a thirty-dollar node is a listener, and the traffic on this mesh is where people are and what they are carrying.",
+          "cmd": "meshtastic --ch-set name carino --ch-set psk random --ch-index 0"
+        },
+        {
+          "n": 3,
+          "do": "Read back the channel URL and provision the rest from it",
+          "detail": "meshtastic --info prints a complete URL encoding every channel and its key. That URL is the whole configuration — apply it to the other nodes and they are on the mesh. Treat it as a secret: it is the key, not a reference to the key.",
+          "cmd": "meshtastic --info"
+        },
+        {
+          "n": 4,
+          "do": "Name nodes after places, not people",
+          "detail": "site-a, site-b, vehicle, spare. A message from site-b tells you something useful; a message from miguel-2 tells you nothing you did not already know, and it puts a name on the air that does not need to be there."
+        },
+        {
+          "n": 5,
+          "do": "Print the mesh card and put one with each node",
+          "detail": "Channel name, region, node names, the check-in schedule, and the one sentence explaining what this thing is for. The person who picks up the spare node in an emergency is not necessarily you."
+        },
+        {
+          "n": 6,
+          "do": "Schedule a check-in and actually keep it",
+          "detail": "One message on the mesh every Sunday, from each node, by a person. It costs nothing, it is the only way you learn that the vehicle node's cell died in June, and it is the difference between a mesh and four boxes in a drawer."
+        }
+      ]
+    }
+  ],
+
+  "artifacts": [
+    {
+      "id": "ip-card",
+      "channel": "print",
+      "name": "The IP Card",
+      "what": "Credit-card sized and laminated: every service's .internal name and IP literal, the internal CA's root fingerprint, the Yggdrasil address of the hub, the SSID, and one phone number.",
+      "why": "This is the break-glass kit for the morning DNS stops answering. Every other recovery path in the plan assumes you can reach something by name; this card is what you hold when you cannot. It is also the cheapest artifact here and the one most likely to be the difference between a bad hour and a bad week.",
+      "how": "Two sides, 86 × 54 mm, laser toner or pigment ink — dye ink bleeds under a hot laminator. 5 mil pouch. Print the CA fingerprint truncated to 16 hex for eyeball comparison and put the full one in the runbook. One card per household and per staff member, plus a spare taped inside the rack door.",
+      "reprint": "on any renumbering, any CA rotation, any SSID change"
+    },
+    {
+      "id": "runbook",
+      "channel": "print",
+      "name": "Emergency runbook",
+      "what": "Duplex, saddle-stitched, in the fire safe: cold-boot order for node A, restore from the cold HDD, root CA recovery, UPS shutdown sequence, how to re-point the zone at a new registrar, TOTP backup codes.",
+      "why": "Written for the version of yourself that has been awake for twenty hours, and for whoever has to do it if you are not there. Every procedure in it has been executed at least once during a blackout drill — an untested runbook is fiction with page numbers.",
+      "how": "Numbered steps, no prose paragraphs, one procedure per page so a page can be handed to someone. Print the date and git commit of the source document in the footer of every page; two copies, one per site.",
+      "reprint": "after every blackout drill that changes a procedure"
+    },
+    {
+      "id": "key-sheet",
+      "channel": "print",
+      "name": "Paper key escrow sheet",
+      "what": "Shamir shares of the archive passphrase, the CA root recovery material, and TOTP seeds — printed, sealed, and signed across the seal.",
+      "why": "An offline plan that loses its keys is worse than no plan: you keep paying for storage that has become noise. Paper is the only medium here that does not need a working machine to read, and the only one where you can tell at a glance whether someone has opened it.",
+      "how": "Laser only. One share per envelope, signed across the flap, in three locations. Never photograph it, never scan it, never let it near the document scanner queue.",
+      "reprint": "on any key rotation, and immediately if a seal is found broken"
+    },
+    {
+      "id": "quickstart-card",
+      "channel": "print",
+      "name": "Tool quick-start card",
+      "what": "One card per fleet tool: what it does in a sentence, three numbered steps, a QR to the LAN URL, and the offline caveat if it has one.",
+      "why": "The tools are self-explanatory to the person who built them. The card exists so a receptionist can use Metadata or a technician can use Retina without a login, a tutorial or a phone call — which is the actual product.",
+      "how": "A6, colour, laminated. Ships in the box with hardware and lives next to the kiosk. The QR must point at the split-horizon public name so it works identically inside and outside the building.",
+      "reprint": "when a tool's UI changes enough that step 2 stops being true"
+    },
+    {
+      "id": "appliance-manual",
+      "channel": "print",
+      "name": "Appliance manual",
+      "what": "Saddle-stitched booklet shipped with a Carino Systems box: what it is, what it serves, the three name tiers, how to add a user, how to back it up, what to do when it will not boot.",
+      "why": "For a clinic, the manual is what makes 'no internet required' credible rather than alarming. A PDF on the machine is not a manual — if the machine is the thing that is down, the documentation cannot live on it.",
+      "how": "Duplex mono laser, colour cover, in-house finishing. Spanish first, English second. Serial number and build hash written on the inside cover by hand at hand-over.",
+      "reprint": "per appliance revision"
+    },
+    {
+      "id": "pacs-handbook",
+      "channel": "print",
+      "name": "PACS operating handbook",
+      "what": "The air-gapped-imaging booklet: VLAN 99's rules, how a study enters and leaves, the disc handover procedure, retention, and the LFPDPPP / NOM-024-SSA3 posture in plain language.",
+      "why": "Half of this document's commercial value is that patient data never leaves the building, and that claim has to be written down in a form an auditor and a doctor can both read. It also states the constraint clients get wrong most often: the box on VLAN 99 has no gateway, so nothing about it is remote-supportable.",
+      "how": "Duplex booklet, Spanish. Keeps a signed change log at the back so modifications to an air-gapped system have a paper trail — which is the only trail an air-gapped system can have.",
+      "reprint": "on any change to VLAN 99's rules or the disc handover procedure"
+    },
+    {
+      "id": "disc-insert",
+      "channel": "print",
+      "name": "Disc insert and sleeve",
+      "what": "Printed insert for the jewel case or paper sleeve: contents list, build date, short hash, the QR to the intranet index, and the licence statement for the material on the disc.",
+      "why": "The disc face holds a title and eight hex characters; everything else that a recipient needs goes on the insert. The licence line matters more than it looks: it is the difference between a handout and a distribution problem, and it is why the catalogue is built from libre, owned and self-produced material.",
+      "how": "Colour, 120 × 120 mm for jewel cases. Print in the same run as the disc face so the short hash on both cannot diverge.",
+      "reprint": "per disc build"
+    },
+    {
+      "id": "asset-label",
+      "channel": "print",
+      "name": "Asset label",
+      "what": "62 mm thermal label on every device: hostname, IP, MAC, purchase date, asset ID, and a QR to the Topo inventory record.",
+      "why": "When DNS is dead and you are standing in front of a rack, the label is the address book. It also settles the argument about which of two identical mini-PCs is the replica, which is a five-minute argument that happens at the worst possible moment.",
+      "how": "Brother QL-820NWB on VLAN 40, driven by brother_ql over port 9100. Thermal on a warm surface fades — use laminated tape stock inside the rack, not paper.",
+      "reprint": "on renumbering, reimaging, or reassignment"
+    },
+    {
+      "id": "network-map",
+      "channel": "print",
+      "name": "Printed network map",
+      "what": "A single A3 sheet: VLANs, subnets, what lives where, patch panel to switch port mapping, and the physical location of both nodes and the UPS.",
+      "why": "Topo generates it, but the printed copy is the one that works when the machine that runs Topo is the machine that is down. Pin it inside the rack door. The patch panel column is the half people skip and the half you need at midnight with a torch.",
+      "how": "A3 mono laser, laminated, dated. Handwritten corrections in the margin are expected and are a signal that it is time to regenerate it.",
+      "reprint": "when there are more than three handwritten corrections on it"
+    },
+    {
+      "id": "cfdi-fallback",
+      "channel": "print",
+      "name": "Pre-CFDI record pad",
+      "what": "Numbered paper forms for work invoiced during an outage: date, client, RFC, concept, amount, tax treatment, signature.",
+      "why": "CFDI 4.0 needs SAT connectivity and there is no way around it — that is one of the two or three genuine hard dependencies in this whole plan. The mitigation is not technical: it is a numbered paper record captured at the time and reconciled into a real CFDI when the line is back, so the gap is documented rather than reconstructed from memory.",
+      "how": "Sequentially numbered, duplicate copies, bound. Kept with the LTE backup line's SIM so the two are never separated.",
+      "reprint": "per pad, per fiscal year"
+    },
+    {
+      "id": "mesh-card",
+      "channel": "radio",
+      "name": "The mesh card",
+      "what": "One laminated card travelling with each node: channel name, region setting, the four node names and where they live, the weekly check-in time, and one line saying what the thing is for.",
+      "why": "The node will be handed to someone who has never opened the app, on the day the person who configured it is somewhere else. Everything needed to use it has to be attached to it, because the wiki that explains it is on a server that is part of the reason you are holding a radio.",
+      "how": "86 × 54 mm, laser toner, 5 mil pouch, punched and zip-tied to the case. Deliberately does not carry the channel key — a card that leaks the key with the node defeats the point of setting one.",
+      "reprint": "on any channel key rotation or node rename"
+    },
+    {
+      "id": "mesh-log",
+      "channel": "radio",
+      "name": "Node deployment log",
+      "what": "A single page per node: serial, firmware version at deployment, cell fitted and date, antenna, mounting location, and every check-in it missed.",
+      "why": "LoRa nodes fail silently and slowly. The 18650 loses capacity, the enclosure cracks in UV, the antenna connector corrodes — none of which announces itself. The log is what turns 'the mesh feels flaky' into 'the vehicle node has missed four check-ins since the cell was replaced in March'.",
+      "how": "Paper in the rack folder, and a photo of each page into Paperless-ngx so it is searchable when the folder is at the other site.",
+      "reprint": "on cell replacement or firmware upgrade"
+    }
+  ],
+
+  "uses": [
+    {
+      "id": "nfc-wifi",
+      "channel": "nfc",
+      "name": "Tap-to-join Wi-Fi",
+      "tag": "NTAG215 PVC card at reception",
+      "payload": "NDEF WSC record (SSID + WPA2 key), plus a printed Wi-Fi QR on the same card",
+      "why": "No typing, no whiteboard, no reading a 24-character key aloud across a waiting room. Note the split: Android joins from the tag, iOS ignores NFC Wi-Fi provisioning entirely and needs the QR — so the QR twin is the iPhone path, not decoration. Guests land on VLAN 50, which has internet and no route to anything else."
+    },
+    {
+      "id": "nfc-tool",
+      "channel": "nfc",
+      "name": "Tap-to-open a fleet tool",
+      "tag": "NTAG215 sticker on the desk, the wall or the kiosk bezel",
+      "payload": "NDEF URI to the split-horizon public name, e.g. https://retina.carino.systems/",
+      "why": "Encode the public name, never the IP literal: split-horizon DNS resolves it to the LAN inside the building and the tag keeps working outside it. Encoding 10.20.0.30 makes a tag that dies the day you renumber, and renumbering is the one event this whole layer exists to survive."
+    },
+    {
+      "id": "nfc-asset",
+      "channel": "nfc",
+      "name": "Asset tag",
+      "tag": "NTAG215 sticker on every device, next to the printed label",
+      "payload": "NDEF URI to the Topo inventory record for that asset ID",
+      "why": "A phone tap opens the machine's record: purchase date, warranty, what it runs, what it is plugged into. The tag costs 20 centavos and removes the step where someone types a serial number wrong into an inventory search."
+    },
+    {
+      "id": "nfc-loan",
+      "channel": "nfc",
+      "name": "Equipment loan tracking",
+      "tag": "NTAG216 disc glued into loaner hardware",
+      "payload": "Asset ID + URI to the check-in/out log",
+      "why": "Loaners come back when checking them out takes one second and leaves a timestamped row. They do not come back when it requires opening a spreadsheet. The disc tag goes inside the case, not on it, so it survives the sticker being picked off."
+    },
+    {
+      "id": "nfc-entitlement",
+      "channel": "nfc",
+      "name": "Appliance entitlement token",
+      "tag": "PVC NFC card shipped in the box with a Carino Systems appliance",
+      "payload": "Signed support-contract ID (Ed25519 signature over the contract ID and expiry)",
+      "why": "The business model sells support, not licences, so entitlement is a physical object rather than a licence server phoning home. The appliance verifies the signature offline against a public key baked in at build time. The failure mode is losing the card, which is a support call — not the appliance refusing to run, which it never does."
+    },
+    {
+      "id": "nfc-vcard",
+      "channel": "nfc",
+      "name": "Business card",
+      "tag": "PVC NFC card, NTAG215",
+      "payload": "vCard record + URI to the public site",
+      "why": "Works on the recipient's phone with no app and no internet on their side, which is the point at a conference where the venue Wi-Fi has collapsed. The vCard is the payload that matters; the URI is the part that stops working if the domain does, so the card also carries the phone number in ink."
+    },
+    {
+      "id": "nfc-media-sleeve",
+      "channel": "nfc",
+      "name": "Disc and USB packaging tag",
+      "tag": "NTAG215 sticker on the sleeve",
+      "payload": "Contents hash + URI to the intranet index entry for that build",
+      "why": "Tells you what is on the disc without putting the disc in a drive — which matters when you are looking for one build in a spindle of fifty. The hash on the tag, the short hash on the disc face and the full hash in the registry must all agree, and the tag is the one that gets checked most."
+    },
+    {
+      "id": "nfc-kiosk",
+      "channel": "nfc",
+      "name": "Kiosk language card",
+      "tag": "NTAG215 stickers on the kiosk shelf, one per language",
+      "payload": "NDEF URI to the hub with the locale set, e.g. https://carino.systems/?lang=es",
+      "why": "The fleet ships es, pt-BR, ja and ru locales; offline should not mean English-only. Four stickers do what a language menu does, without the user having to find the language menu in a language they do not read."
+    },
+    {
+      "id": "nfc-spool",
+      "channel": "nfc",
+      "name": "Filament spool tag",
+      "tag": "NTAG215 sticker on the spool side",
+      "payload": "Material, colour, batch, purchase date, and the date it was last dried",
+      "why": "Humidity in Mexico ruins an unsealed spool, and wet PETG prints look like a printer fault rather than a filament fault — which is an hour lost to the wrong diagnosis. The dry date on the spool is the fastest way to rule it out."
+    },
+    {
+      "id": "nfc-rack",
+      "channel": "nfc",
+      "name": "Rack-door runbook tag",
+      "tag": "NTAG215 sticker inside the rack door, under the printed network map",
+      "payload": "URI to the runbook index on the hub",
+      "why": "The digital copy for when the problem is small, sitting directly above the paper copy for when it is not. If the tag does not resolve, that is itself diagnostic information: the hub is down, so turn to the printed page beside it."
+    },
+    {
+      "id": "nfc-study-sleeve",
+      "channel": "nfc",
+      "name": "Imaging study sleeve tag",
+      "tag": "NTAG215 sticker on the sleeve of a patient study disc",
+      "payload": "Accession number and a URI to the local viewer — never a name, never a date of birth, never a diagnosis",
+      "why": "A tag is readable by every phone that passes within four centimetres of it, including in a waiting room, so nothing identifying goes on one. The accession number is meaningless without the PACS on VLAN 99, which is exactly the property you want, and it is the difference between a convenience feature and a LFPDPPP incident."
+    },
+    {
+      "id": "nfc-part",
+      "channel": "nfc",
+      "name": "Printed-part provenance tag",
+      "tag": "NTAG215 sticker in a recess designed into the printed part",
+      "payload": "URI to the model directory in the mirror: source, gcode, profile, licence",
+      "why": "The bracket that broke once will break again, usually in three years when nobody remembers which of forty models it was. A tag moulded into the part means the replacement is one tap and one print away instead of an afternoon of searching a repo."
+    },
+    {
+      "id": "nfc-mesh",
+      "channel": "nfc",
+      "name": "Meshtastic channel card",
+      "tag": "NTAG215 PVC card handed out with a node",
+      "payload": "Meshtastic channel URL (deep link into the app)",
+      "why": "Joining a mesh channel otherwise means reading a base64 blob aloud or scanning a QR from someone's screen — both of which fail in exactly the conditions the mesh exists for. Requires the app already installed, so the card ships with the node, not on its own."
+    },
+    {
+      "id": "print-caddy",
+      "channel": "3dprint",
+      "name": "Drive caddies and 3.5-to-5.25 adapters",
+      "material": "PETG",
+      "time": "~2 h, ~60 g",
+      "why": "Caddies for a chassis you already own are a part number that goes end-of-life while the chassis is still fine. Printing them is cheaper than the eBay price of a discontinued OEM caddy, and you can add the drive serial to the front face in the model so the label never falls off."
+    },
+    {
+      "id": "print-rack",
+      "channel": "3dprint",
+      "name": "Rack ears, blanking plates, cable combs",
+      "material": "PETG or ASA",
+      "time": "1-4 h depending on part",
+      "why": "Airflow management is what a blanking plate is for, and a missing one costs real degrees on the drive stack. Never PLA here: a rack interior sits around 45-50 °C and PLA starts creeping at 60 °C, so the part that looks fine in March is sagging in May."
+    },
+    {
+      "id": "print-mesh-case",
+      "channel": "3dprint",
+      "name": "Meshtastic node enclosures",
+      "material": "ASA",
+      "time": "~1.5 h, ~35 g",
+      "why": "Nodes live outdoors on a roof or a pole, and PETG goes brittle and yellow under a year of Mexican sun. ASA is worth the smell and the enclosure it needs to print in. Design the antenna exit with a drip loop; water ingress kills more nodes than anything else."
+    },
+    {
+      "id": "print-pi-case",
+      "channel": "3dprint",
+      "name": "GPS-NTP Pi housing",
+      "material": "PETG",
+      "time": "~3 h",
+      "why": "The GPS antenna cable is the fragile part of the whole time source, and a printed case with proper strain relief prevents the failure that is hardest to diagnose: a clock that drifts intermittently and takes TLS validation and TOTP down with it three weeks later."
+    },
+    {
+      "id": "print-client-part",
+      "channel": "3dprint",
+      "name": "Replacement parts for client hardware",
+      "material": "PETG, ASA for anything warm",
+      "time": "30 min to 4 h",
+      "why": "Knobs, clips, brackets, feet, connector shrouds. This is the use case that pays for the printer: a plastic clip stopping a working machine is a three-week import or a two-hour print, and the client is comparing those two numbers, not the two prices. Measure with calipers, model in FreeCAD, keep the file — the second one is always ordered."
+    },
+    {
+      "id": "print-jigs",
+      "channel": "3dprint",
+      "name": "Disc and label production jigs",
+      "material": "PLA is fine here",
+      "time": "1-2 h",
+      "why": "A jig that holds a disc square for insert alignment, or a stack guide for the duplicator, turns a fiddly manual step into a repeatable one. Jigs live on a bench at room temperature and never bear load, which is the one context where PLA is the correct material."
+    },
+    {
+      "id": "print-nfc-holders",
+      "channel": "3dprint",
+      "name": "NFC card stands and tag holders",
+      "material": "PETG",
+      "time": "~1 h",
+      "why": "A reception Wi-Fi card lying flat on a counter gets buried; the same card in a stand with 'tap or scan' on it gets used. Holders also give the printed QR twin a permanent home on the same object as the tag, which is the whole redundancy argument made physical."
+    },
+    {
+      "id": "print-packaging",
+      "channel": "3dprint",
+      "name": "Disc and USB packaging inserts",
+      "material": "PETG",
+      "time": "~1 h per insert",
+      "why": "An appliance handed to a clinic with its discs, its stick and its cards seated in a fitted insert reads as a product rather than a favour, and it survives the courier. This is packaging as part of the deliverable, printed in-house, with no supplier and no minimum order."
+    },
+    {
+      "id": "print-signage",
+      "channel": "3dprint",
+      "name": "Signage and wayfinding",
+      "material": "PETG, two-colour",
+      "time": "1-3 h",
+      "why": "Room numbers, rack labels, kiosk headers, 'do not unplug' plates over the UPS outlets. That last one is not a joke: the printed plate over a socket has prevented more outages than any monitoring rule."
+    },
+    {
+      "id": "print-anatomy",
+      "channel": "3dprint",
+      "name": "DICOM-derived anatomical models",
+      "material": "PLA for planning models, resin for fine detail",
+      "time": "4-20 h",
+      "why": "A natural extension of Retina and Carino-PACS: segment a study, print it, and hand a surgeon something they can hold during a planning conversation. It is a differentiator rather than a resilience feature, and it stays on the air-gapped side — the segmentation runs on VLAN 99 and only the mesh leaves, with no identifiers attached."
+    }
+  ]
+}
