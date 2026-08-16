@@ -15,8 +15,7 @@ documents, medical imaging and reference material that actually get used live on
 in the building, on a network you own, under names you define, behind certs you sign.
 
 The full written plan this site is built from lives in
-[`../OFFLINE.md`](https://github.com/MiguelCarino/Offline) — the site is its interactive form.
-Keep the two in sync.
+[`OFFLINE.md`](OFFLINE.md) — the site is its interactive form. Keep the two in sync.
 
 ## The six sections
 
