@@ -209,6 +209,10 @@ const I18N = {
         'Every': 'Cada',
         'Deliverable': 'Entregable',
         'Exit': 'Salida',
+        // Start (00) — hero
+        "The day the internet is taken away,": "El día que te quiten el internet,",
+        "everything you kept locally still opens.": "todo lo que guardaste localmente sigue abriendo.",
+        "<b>Carino Offline</b> is a planning tool for running without the internet — what to download before you can't, what still works with the cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. It recommends: it configures nothing, installs nothing, and never touches your network.": "<b>Carino Offline</b> es una herramienta de planeación para operar sin internet: qué descargar antes de no poder, qué sigue funcionando con el cable desconectado, cuánto cuesta el hardware en México y cómo el medio físico le gana a una ruta bloqueada. Recomienda: no configura nada, no instala nada y nunca toca tu red.",
         // Start (00)
         "Start": "Inicio",
         "what this is": "qué es esto",
@@ -430,6 +434,10 @@ const I18N = {
         'render failed: ': 'falha ao renderizar: ',
         'Could not load': 'Não foi possível carregar',
         'The rest of the site still works.': 'O resto do site continua funcionando.',
+        // Start (00) — hero
+        "The day the internet is taken away,": "No dia em que tirarem a internet,",
+        "everything you kept locally still opens.": "tudo o que você guardou localmente continua abrindo.",
+        "<b>Carino Offline</b> is a planning tool for running without the internet — what to download before you can't, what still works with the cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. It recommends: it configures nothing, installs nothing, and never touches your network.": "<b>Carino Offline</b> é uma ferramenta de planejamento para operar sem internet: o que baixar antes de não poder, o que continua funcionando com o cabo desligado, quanto custa o hardware no México e como a mídia física vence uma rota bloqueada. Ela recomenda: não configura nada, não instala nada e nunca toca na sua rede.",
         // Start (00)
         "Start": "Início",
         "what this is": "o que é isto",
@@ -651,6 +659,10 @@ const I18N = {
         'Filter': 'フィルター',
         'clear': '解除',
         'Copied ✓': 'コピーしました ✓',
+        // Start (00) — hero
+        "The day the internet is taken away,": "インターネットを取り上げられた日も、",
+        "everything you kept locally still opens.": "手元に置いたものはすべて開く。",
+        "<b>Carino Offline</b> is a planning tool for running without the internet — what to download before you can't, what still works with the cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. It recommends: it configures nothing, installs nothing, and never touches your network.": "<b>Carino Offline</b> はインターネットなしで運用するための計画ツールです。落とせなくなる前に何を落とすか、ケーブルを抜いても何が動くか、メキシコでの機材の価格はいくらか、そして遮断された経路には物理メディアが勝つこと。あくまで推奨するだけで、設定も導入も行わず、ネットワークには一切触れません。",
         // Start (00)
         "Start": "スタート",
         "what this is": "これは何か",
@@ -873,6 +885,10 @@ const I18N = {
         'likelihood': 'вероятность',
         'breaks': 'поломки',
         'clear': 'сбросить',
+        // Start (00) — hero
+        "The day the internet is taken away,": "В день, когда интернет отберут,",
+        "everything you kept locally still opens.": "всё, что вы держите локально, всё равно откроется.",
+        "<b>Carino Offline</b> is a planning tool for running without the internet — what to download before you can't, what still works with the cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. It recommends: it configures nothing, installs nothing, and never touches your network.": "<b>Carino Offline</b> — инструмент планирования работы без интернета: что скачать, пока это ещё возможно, что продолжает работать с выдернутым кабелем, сколько стоит железо в Мексике и почему физический носитель обходит заблокированный маршрут. Он только рекомендует: ничего не настраивает, ничего не устанавливает и никогда не трогает вашу сеть.",
         // Start (00)
         "Start": "Старт",
         "what this is": "что это такое",

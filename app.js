@@ -211,14 +211,6 @@
   /* A shell comment must stay on one line or the '#' stops protecting it. */
   function shComment(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
 
-  /* The Start lede prints only the opening sentence of a premise block; the rest
-     of the paragraph opens in the dialog, which is where prose belongs. */
-  function firstSentence(s) {
-    const t = str(s).trim();
-    const m = t.match(/^[\s\S]*?[.!?](?:\s|$)/);
-    return (m ? m[0] : t).trim();
-  }
-
   function haystack() {
     let out = '';
     for (let i = 0; i < arguments.length; i++) {
@@ -534,19 +526,25 @@
 
   function renderStart() {
     const host = $('startBody');
+    /* The hero is static markup in index.html, so it survives a failed
+       data/start.json — but it has no business sitting above a list of search
+       hits from five files. */
+    const hero = $('startHero');
+    if (hero) hero.hidden = !!state.q;
     if (!host || dataMissing('start')) return;
     if (state.q) { renderStartSearch(host); return; }
 
     const d = obj(DATA.start);
     const premise = arr(d.premise);
-    const lede = premise[0] ? firstSentence(premise[0].body) : '';
 
-    let html = `<div class="lede">
-      ${lede ? `<p>${escapeHtml(lede)}</p>` : ''}
-      ${premise.length ? `<div class="alts">${premise.map(pz =>
+    /* Only the pills. The sentence that used to open this panel said what the
+       hero above now says at hero size, and saying it twice cost the vertical
+       room the hero needed. The three premises still expand in the dialog. */
+    let html = premise.length ? `<div class="lede">
+      <div class="alts">${premise.map(pz =>
         `<button class="alt" type="button" data-act="detail" data-kind="premise"
-           data-rec="${escapeHtml(str(pz.id))}">${escapeHtml(str(pz.title))} →</button>`).join('')}</div>` : ''}
-    </div>`;
+           data-rec="${escapeHtml(str(pz.id))}">${escapeHtml(str(pz.title))} →</button>`).join('')}</div>
+    </div>` : '';
 
     const cards = arr(d.sections).filter(sc => SEC_BY_KEY[str(sc.key)]);
     if (cards.length) {
@@ -1581,6 +1579,11 @@
         t.setAttribute('tabindex', s.key === key ? '0' : '-1');
       }
     });
+
+    /* On Start the hero inside the panel is the page header, so the app bar's
+       own title is hidden (see .ohero in index.html). It is still written
+       below: switching away has to find it already correct. */
+    document.body.classList.toggle('is-start', key === 'start');
 
     const eb = $('appEyebrow'), ti = $('appTitle'), de = $('appDesc'), q = $('q');
     if (eb) eb.textContent = TT(sec.eyebrow);
