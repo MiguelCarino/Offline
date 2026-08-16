@@ -282,33 +282,43 @@
     button.alt{background:transparent;cursor:pointer;line-height:1.6;transition:0.13s;}
     button.alt:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-faint);}
 
-    /* ══ HERO ══ the Start panel's first block, and the only place on the site
-       that says what the site is. You used to land on section cards with a
-       single sentence above them; the project never introduced itself.
+    /* ══ HERO ══ the landing screen, built like the PACS one: the mark, the
+       motif under it as its underline, the two-line headline, and one centred
+       paragraph. It is the only place on the site that says what the site is —
+       you used to land on section cards and the project never introduced
+       itself.
 
-       It is static markup rather than app.js output for two reasons: it is
-       translated like the fleet's other landing pages, and it still says
-       something when data/start.json fails to load.
+       Static markup rather than app.js output for two reasons: it is translated
+       like the fleet's other landing pages, and it still says something when
+       data/start.json fails to load.
 
-       Laid out as a ROW. The Start panel has to fit 1400x900 without scrolling
-       and had 8px of slack, so a graphic stacked above the words would not fit
-       — beside them it costs nothing vertical. The rest of the room comes from
-       hiding the app bar's own title while this is up: two headers arguing over
-       the same second of attention was never worth the pixels either. */
+       Every size is written `base + --tall x rate`, so it is exactly `base` on
+       a 900px laptop and grows into the slack on a taller screen — a calc
+       rather than a breakpoint, because a breakpoint steps.
+
+       While it is up the app bar's own title is hidden (body.is-start): two
+       headers arguing over the same second of attention is what the PACS page
+       fixed. */
     body.is-start .app-intro{display:none;}
     .ohero{display:none;}
-    body.is-start .ohero{flex-shrink:0;display:grid;grid-template-columns:1fr auto;
-      align-items:center;gap:26px;
-      margin-bottom:min(22px,calc(10px + var(--tall) * .07));
-      padding-bottom:min(20px,calc(8px + var(--tall) * .07));border-bottom:1px solid var(--border);}
-    .ohero-h{margin:0 0 min(16px,calc(8px + var(--tall) * .05));font-family:var(--display);
-      font-weight:900;line-height:1.12;letter-spacing:-0.01em;
-      font-size:min(2.1rem,calc(1.45rem + var(--tall) * .049));}
+    body.is-start .ohero{display:block;flex-shrink:0;text-align:center;
+      padding:min(48px,calc(10px + var(--tall) * .21)) 0 min(34px,calc(14px + var(--tall) * .11));}
+
+    /* The mark sits above the motif, which reads as its underline. Both are
+       aria-hidden: the navbar already says "Carino OFFLINE" in text. */
+    .ohero-mark{display:flex;flex-direction:column;align-items:center;
+      gap:min(30px,calc(13px + var(--tall) * .095));
+      margin:0 auto min(40px,calc(14px + var(--tall) * .15));}
+    .ohero-mark .mark{display:block;width:auto;
+      height:min(112px,calc(42px + var(--tall) * .39));}
+    .ohero-h{margin:0 auto min(34px,calc(13px + var(--tall) * .12));font-family:var(--display);
+      font-weight:900;line-height:1.1;letter-spacing:-0.01em;
+      font-size:min(3.1rem,calc(1.6rem + var(--tall) * .13));}
     .ohero-h span{display:block;}
     .ohero-gold{color:var(--accent);}
-    .ohero-lede{margin:0;color:var(--text-muted);line-height:1.5;
-      max-width:min(1000px,calc(900px + var(--tall) * .55));
-      font-size:min(1rem,calc(.83rem + var(--tall) * .0106));}
+    .ohero-lede{margin:0 auto;color:#d4d4d4;line-height:1.6;
+      max-width:min(780px,calc(660px + var(--tall) * .5));
+      font-size:min(1.16rem,calc(.9rem + var(--tall) * .0155));}
     .ohero-lede b{color:var(--text-main);}
 
     /* The uplink is cut and the local ring keeps circulating — the argument of
@@ -316,8 +326,8 @@
        faint full trace with one bright dash sweeping it, which is the only
        motion on the page. dasharray 22+78 sums to the pathLength of 100, so the
        lap closes seamlessly. */
-    .ohero-link{width:min(260px,calc(200px + var(--tall) * .33));height:auto;aspect-ratio:10 / 3;
-      overflow:visible;flex-shrink:0;}
+    .ohero-link{display:block;width:min(330px,calc(210px + var(--tall) * .66));height:auto;
+      aspect-ratio:240 / 44;overflow:visible;}
     .ohero-link .trace{fill:none;stroke:var(--accent);stroke-width:2;opacity:0.14;
       stroke-linecap:round;}
     .ohero-link .cut{stroke:var(--danger);stroke-width:2;opacity:0.55;stroke-linecap:round;}
@@ -327,20 +337,30 @@
     @media(prefers-reduced-motion:reduce){
       .ohero-link .pulse{animation:none;stroke-dasharray:none;}
     }
-    /* Removed rather than hidden below the fold-in point: a narrow column needs
-       the width more than the picture, and display:none gives the row back. */
-    @media(max-width:900px){
-      body.is-start .ohero{grid-template-columns:1fr;gap:0;}
-      .ohero-link{display:none;}
-    }
-    /* This block does not scroll away — it sits above the panel, as the app bar's
-       header does everywhere else — so on a phone it is clamped the same way
-       .app-desc is, rather than being allowed to eat half the screen. */
+    /* Removed rather than hidden: a phone needs the height more than the
+       picture, and display:none gives the row back. The mark stays — it is the
+       only thing on the screen that is not words. */
     @media(max-width:640px){
-      .ohero-h{font-size:1.18rem;}
-      .ohero-lede{font-size:0.78rem;line-height:1.45;
-        display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+      body.is-start .ohero{padding:14px 0 18px;}
+      .ohero-link{display:none;}
+      .ohero-mark{margin-bottom:16px;}
+      .ohero-mark .mark{height:52px;}
+      .ohero-h{font-size:1.5rem;margin-bottom:14px;}
+      .ohero-lede{font-size:0.88rem;line-height:1.5;}
     }
+
+    /* ── START SCROLLS, THE TOOL DOES NOT ──
+       Every other panel is a fixed-height app surface: the list scrolls inside
+       it and the page never does. Start is a landing page, and a hero at this
+       scale would squeeze that surface to a letterbox. So on Start only, the
+       wrap becomes one ordinary scrolling document — hero, search, then the
+       sections — which is also how the PACS page this is modelled on reads. */
+    body.is-start .wrap{overflow-y:auto;scrollbar-width:thin;
+      scrollbar-color:var(--border) transparent;}
+    body.is-start .wrap::-webkit-scrollbar{width:8px;}
+    body.is-start .wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    body.is-start .panels{position:static;flex:0 0 auto;min-height:0;}
+    body.is-start .panel.active{position:static;inset:auto;overflow:visible;}
 
     /* ══ START PANEL ══ the five sections as cards, then the numbered route ══ */
     .start-tiles{grid-template-columns:repeat(auto-fill,minmax(205px,1fr));margin-bottom:4px;}
@@ -487,17 +507,6 @@
     #grabTiers,#stackGrid,#ironGroups,#sneakBody,#startBody{flex-shrink:0;}
     #ironRules{margin-top:18px;}
 
-    /* slim always-visible footnote (page never scrolls, so this stays pinned) */
-    .footnote{flex-shrink:0;border-top:1px solid var(--border);margin-top:8px;padding-top:7px;
-      font-size:0.66rem;color:var(--text-dim);line-height:1.4;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-    .footnote b{color:var(--text-muted);}
-    .footnote code{font-family:var(--mono);color:var(--text-muted);}
-    .footnote .fn-sep{opacity:0.4;}
-    /* on a phone the footnote costs four lines of list, so keep only the first claim */
-    @media(max-width:640px){
-      .footnote{font-size:0.6rem;}
-      .footnote > span:not(:first-child),.footnote .fn-sep{display:none;}
-    }
   </style>
 </head>
 <body>
@@ -521,25 +530,35 @@
          while a search is running, when this panel is listing hits from all
          five files and a pitch above them is only in the way. -->
     <header class="ohero" id="startHero">
-      <div>
-        <!-- No eyebrow naming the project: the navbar says "Carino · OFFLINE" in
-             larger type 50px above this, and the lede names it again in the
-             first two words. Three times on one screen is not branding. -->
-        <h1 class="ohero-h">
-          <span data-i18n>The day the internet is taken away,</span>
-          <span class="ohero-gold" data-i18n>everything you kept locally still opens.</span>
-        </h1>
-        <p class="ohero-lede" data-i18n-html><b>Carino Offline</b> is a planning tool for running without the internet — what to download before you can't, what still works with the cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. It recommends: it configures nothing, installs nothing, and never touches your network.</p>
+      <!-- The Carino arc, drawn rather than fetched: logo.webp is 50x50 and goes
+           soft at this size, and an inline path costs no request. -->
+      <div class="ohero-mark" aria-hidden="true">
+        <svg class="mark" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <path d="M 81.07 25.82 A 34.81 34.81 0 1 0 81.07 74.18" fill="none"
+                stroke="var(--accent)" stroke-width="16.38" stroke-linecap="butt"/>
+        </svg>
+        <!-- Drawn wide and flat so it reads as the mark's underline, the way the
+             PACS hero's EKG does. The geometry spans 26..214 of a 240 viewBox so
+             its optical centre is the viewBox centre — content weighted to one
+             side leaves the glyph looking shifted under a centred logo. -->
+        <svg class="ohero-link" viewBox="0 0 240 44" preserveAspectRatio="xMidYMid meet">
+          <!-- the uplink, severed -->
+          <polyline class="trace" points="26,22 74,22" />
+          <path class="cut" d="M84 12 L98 32 M98 12 L84 32" />
+          <!-- and the LAN it was feeding, still going round -->
+          <polyline class="trace" points="108,22 160,22" />
+          <circle class="trace" cx="196" cy="22" r="18" />
+          <circle class="pulse" cx="196" cy="22" r="18" pathLength="100" />
+        </svg>
       </div>
-      <svg class="ohero-link" viewBox="0 0 200 60" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-        <!-- the uplink, severed -->
-        <polyline class="trace" points="2,30 56,30" />
-        <path class="cut" d="M66 20 L80 40 M80 20 L66 40" />
-        <!-- and the LAN it was feeding, still going round -->
-        <polyline class="trace" points="90,30 122,30" />
-        <circle class="trace" cx="155" cy="30" r="26" />
-        <circle class="pulse" cx="155" cy="30" r="26" pathLength="100" />
-      </svg>
+      <!-- No eyebrow naming the project: the navbar says "Carino · OFFLINE" 50px
+           above this, and the lede names it again in the first two words. Three
+           times on one screen is not branding. -->
+      <h1 class="ohero-h">
+        <span data-i18n>The day the internet is taken away,</span>
+        <span class="ohero-gold" data-i18n>everything you kept locally still opens.</span>
+      </h1>
+      <p class="ohero-lede" data-i18n-html><b>Carino Offline</b> is a planning tool for running without the internet — what to download before you can't, what still works with the cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. It recommends: it configures nothing, installs nothing, and never touches your network.</p>
     </header>
 
     <!-- ══════════ APP BAR ══════════ -->
@@ -611,17 +630,6 @@
         <div id="planBody"></div>
       </div>
 
-    </div>
-
-    <!-- ══════════ SLIM FOOTNOTE (pinned; page never scrolls) ══════════ -->
-    <div class="footnote">
-      <span data-i18n-html><b>This page practises what it documents</b> — no CDN, no fonts from a third party, no telemetry. Save it or clone the repo and it keeps working with the cable out.</span>
-      <span class="fn-sep">·</span>
-      <span data-i18n-html>All content lives in six editable files under <code>data/</code> — fork it and make the list yours.</span>
-      <span class="fn-sep">·</span>
-      <span data-i18n>Checkboxes are stored in this browser only; clearing site data clears them.</span>
-      <span class="fn-sep">·</span>
-      <span data-i18n>Prices and sizes are dated estimates. Verify before you buy or before you size a pool.</span>
     </div>
 
   </div>

@@ -1599,6 +1599,11 @@
 
     const panelEl = $(sec.panel);
     if (panelEl) panelEl.scrollTop = 0;
+    /* Start scrolls the wrap rather than the panel (see body.is-start in
+       index.html), so the wrap needs the same reset or you come back to a
+       landing page already scrolled past its own hero. */
+    const wrapEl = document.querySelector('.wrap');
+    if (wrapEl) wrapEl.scrollTop = 0;
 
     renderChips();
     renderActive();
