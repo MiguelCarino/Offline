@@ -535,91 +535,39 @@
     if (state.q) { renderStartSearch(host); return; }
 
     const d = obj(DATA.start);
-    const premise = arr(d.premise);
 
-    /* Only the pills. The sentence that used to open this panel said what the
-       hero above now says at hero size, and saying it twice cost the vertical
-       room the hero needed. The three premises still expand in the dialog. */
-    let html = premise.length ? `<div class="lede">
-      <div class="alts">${premise.map(pz =>
-        `<button class="alt" type="button" data-act="detail" data-kind="premise"
-           data-rec="${escapeHtml(str(pz.id))}">${escapeHtml(str(pz.title))} →</button>`).join('')}</div>
-    </div>` : '';
-
+    /* THE LANDING IS THREE THINGS: the hero above, the five ways in, and one
+       row of chips. Everything else — the numbered route, the box and what it
+       serves, the honest limits, the three premises — opens in the same dialog
+       the other five panels use. It was all laid out down the page before, so
+       the sentence that earns a block and the block itself were a scroll apart,
+       which is the opposite of what a landing page is for. Nothing is gone: the
+       chips below reach every one of them in a click. */
     const cards = arr(d.sections).filter(sc => SEC_BY_KEY[str(sc.key)]);
-    if (cards.length) {
-      html += `<div class="d-lbl">${TT('The five sections')}</div>
-        <div class="tiles start-tiles">${cards.map(sc => {
-          const n = startCount(str(sc.key));
-          return `<article class="tile start-card" data-act="go" data-panel="${escapeHtml(str(sc.key))}"
-                   tabindex="0" role="button" title="${escapeHtml(str(sc.lead))}">
-            <span class="tile-dot num t-accent">${escapeHtml(str(sc.num))}</span>
-            <span class="tile-main">
-              <span class="tile-name">${escapeHtml(TT(str(sc.name)))}</span>
-              <span class="tile-sub">${escapeHtml(str(sc.what))}</span>
-              <span class="tile-n num t-dim">${escapeHtml(n || '—')}</span>
-            </span>
-          </article>`;
-        }).join('')}</div>`;
-    }
-
-    const steps = arr(d.steps);
-    if (steps.length) {
-      html += `<div class="d-lbl">${TT('Start here')}</div>` + steps.map(st => {
-        const meta = startSection(st.goes);
-        return `<article class="row start-step" data-act="go" data-panel="${escapeHtml(str(st.goes))}"
-                 tabindex="0" role="button" aria-label="${escapeHtml(str(st.title))}">
-          <span class="step-n num">${escapeHtml(str(st.n))}</span>
-          <span class="row-main">
-            <span class="row-name">${escapeHtml(str(st.title))}</span>
-            <span class="row-sub">${escapeHtml(str(st.what))}</span>
+    let html = cards.length ? `<div class="tiles start-tiles">${cards.map(sc => {
+        const n = startCount(str(sc.key));
+        return `<article class="tile start-card" data-act="go" data-panel="${escapeHtml(str(sc.key))}"
+                 tabindex="0" role="button" title="${escapeHtml(str(sc.lead))}">
+          <span class="tile-dot num t-accent">${escapeHtml(str(sc.num))}</span>
+          <span class="tile-main">
+            <span class="tile-name">${escapeHtml(TT(str(sc.name)))}</span>
+            <span class="tile-sub">${escapeHtml(str(sc.what))}</span>
+            <span class="tile-n num t-dim">${escapeHtml(n || '—')}</span>
           </span>
-          <span class="row-cat">${escapeHtml(meta ? str(meta.num) + ' · ' + TT(str(meta.name)) : '')}</span>
-          <button class="copybtn" type="button" data-act="detail" data-kind="step"
-                  data-rec="${escapeHtml(str(st.id))}">${TT('why')}</button>
         </article>`;
-      }).join('');
-    }
+      }).join('')}</div>` : '';
 
-    const img = obj(d.image);
-    if (img.name) {
-      html += `<div class="d-lbl">${TT('The box that serves the LAN')}</div>
-        <article class="row" data-act="detail" data-kind="image" data-rec="0" tabindex="0" role="button">
-          <span class="row-main">
-            <span class="row-name num">${escapeHtml(str(img.name))}</span>
-            <span class="row-sub">${escapeHtml(str(img.what))}</span>
-          </span>
-          <span class="row-num t-dim">${escapeHtml(str(img.repo))}</span>
-        </article>`;
-    }
-
-    /* The companion to the row above: the box is one thing, what it has to
-       serve is another, and "the fleet, served locally" was a claim in the
-       Caddyfile that this page never backed with a list. Three named because
-       they are the three that earn their place on a LAN with no route out; the
-       rest are a sentence, and the six that do not work open in the dialog. */
-    const fleet = obj(d.fleet);
-    const fleetLead = arr(fleet.lead);
-    if (fleetLead.length) {
-      html += `<div class="d-lbl">${TT('And what it serves')}
-          <span class="count">${num(fleet.served, 0)} ${TT('of')} ${num(fleet.total, 0)}</span></div>`
-        + fleetLead.map(f => `<article class="row static">
-            <span class="row-main">
-              <span class="row-name num">${escapeHtml(str(f.host))}</span>
-              <span class="row-sub">${escapeHtml(str(f.what))}</span>
-            </span>
-          </article>`).join('')
-        + (fleet.also ? `<p class="d-p t-dim">${escapeHtml(str(fleet.also))}</p>` : '')
-        + `<div class="alts"><button class="alt" type="button" data-act="detail"
-             data-kind="fleetnote" data-rec="0">${TT('What it cannot serve, and why')}</button></div>`;
-    }
-
-    const limits = arr(d.limits);
-    if (limits.length) {
-      html += `<div class="d-lbl">${TT('What this does not do')} ${stamp(d.updated)}</div>
-        <div class="alts">${limits.map(l =>
-          `<button class="alt" type="button" data-act="detail" data-kind="limit"
-             data-rec="${escapeHtml(str(l.id))}">${escapeHtml(str(l.name))}</button>`).join('')}</div>`;
+    /* kind, record, label — in the order a first reader needs them */
+    const chips = [];
+    if (arr(d.steps).length)   chips.push(['route', '0', TT('Start here')]);
+    arr(d.premise).forEach(pz => chips.push(['premise', str(pz.id), str(pz.title)]));
+    if (obj(d.image).name)     chips.push(['image', '0', TT('The box that serves the LAN')]);
+    if (arr(d.limits).length)  chips.push(['limitsall', '0', TT('What this does not do')]);
+    if (chips.length) {
+      html += `<div class="alts start-chips">${chips.map(c =>
+        `<button class="alt" type="button" data-act="detail" data-kind="${escapeHtml(c[0])}"
+           data-rec="${escapeHtml(c[1])}">${escapeHtml(c[2])}</button>`).join('')}
+        <span class="start-stamp t-dim">${stamp(d.updated)}</span></div>`;
     }
 
     setHTML(host, html);
@@ -1186,8 +1134,16 @@
           const mine = items.filter(it => str(it.group) === str(g.id));
           if (!mine.length) return;
           const gSum = mine.reduce((s, it) => s + num(it.usd, 0) * num(it.qty, 1), 0);
+          /* An optional pointer at the fleet tool that answers the neighbouring
+             question. This panel prices ONE site in Mexico; "what shape of
+             machine should this even be" is a different question with its own
+             tool, and the two are worth a link rather than a merge — the shapes
+             do not fit (7 use-case profiles against 59 priced line items). */
+          const see = obj(g.see);
           html += `<section class="group" data-group="${escapeHtml(g.id)}">
             ${groupHead((g.icon ? g.icon + ' ' : '') + str(g.label), '', fmtUSD(gSum))}
+            ${see.url ? `<p class="group-see"><a href="${escapeHtml(str(see.url))}"
+                 target="_blank" rel="noopener">${escapeHtml(str(see.label))} →</a></p>` : ''}
             ${mine.map(it => ironItemHTML(it, fx)).join('')}
           </section>`;
         });
@@ -1888,7 +1844,16 @@
     image:     { list: () => { const i = obj(DATA.start && DATA.start.image); return i.name ? [i] : []; },
                  title: r => str(r.name) },
     limit:     { list: () => arr(DATA.start && DATA.start.limits),   title: r => str(r.name) },
-    /* one object like image, not an array — index "0" is the key */
+    /* Aggregates: one dialog over a whole list, so the landing can carry one
+       chip where it used to carry a block. Each is a synthetic single-record
+       list, so findRec()'s index fallback picks it up as "0" exactly as image
+       does. */
+    route:     { list: () => { const st = arr(DATA.start && DATA.start.steps);
+                               return st.length ? [{ steps: st }] : []; },
+                 title: () => TT('Start here') },
+    limitsall: { list: () => { const l = arr(DATA.start && DATA.start.limits);
+                               return l.length ? [{ limits: l }] : []; },
+                 title: () => TT('What this does not do') },
     fleetnote: { list: () => { const f = obj(DATA.start && DATA.start.fleet);
                                return arr(f.tethered).length ? [f] : []; },
                  title: () => TT('What it cannot serve, and why') },
@@ -1949,6 +1914,21 @@
         + (sec ? `<div class="d-foot"><button class="btn primary" type="button" data-act="go" data-panel="${escapeHtml(sec.key)}">${escapeHtml(TT(sec.title))} →</button></div>` : '');
     }
 
+    if (kind === 'route') {
+      return `<ol class="steps">${arr(r.steps).map(st => {
+        const sec = SEC_BY_KEY[str(st.goes)];
+        return `<li class="step">
+          <div class="step-t"><b>${escapeHtml(str(st.title))}</b>${st.what ? ` <span class="why">— ${escapeHtml(str(st.what))}</span>` : ''}</div>
+          ${dPara('', st.why)}
+          ${sec ? `<button class="btn" type="button" data-act="go" data-panel="${escapeHtml(sec.key)}">${escapeHtml(TT(sec.title))} →</button>` : ''}
+        </li>`;
+      }).join('')}</ol>`;
+    }
+
+    if (kind === 'limitsall') {
+      return arr(r.limits).map(l => dPara(str(l.name), str(l.what)) + dPara('', l.why, 't-dim')).join('');
+    }
+
     if (kind === 'fleetnote') {
       const teth = arr(r.tethered), part = arr(r.partial);
       return (teth.length ? `<div class="d-lbl">${TT('Not served at all')}</div>`
@@ -1959,10 +1939,21 @@
     }
 
     if (kind === 'image') {
+      /* What the box IS and what it SERVES are one question asked twice, so
+         they are one sheet. Three tools named because they are the three that
+         earn their place on a LAN with no route out; the rest are a sentence,
+         and the six that do not work are one chip further in. */
+      const f = obj(DATA.start && DATA.start.fleet), lead = arr(f.lead);
       return dPara('', r.what) + dPara('Why an image', r.why)
         + (r.install ? `<div class="d-lbl">${TT('Switch to it')}</div>` + code(r.install) : '')
         + (r.note ? dPara('Note', r.note, 't-warn') : '')
         + dFacts([['Repository', r.repo]])
+        + (lead.length ? `<div class="d-lbl">${TT('And what it serves')}
+              <span class="count">${num(f.served, 0)} ${TT('of')} ${num(f.total, 0)}</span></div>`
+            + lead.map(x => dPara(str(x.host), str(x.what))).join('')
+            + (f.also ? `<p class="d-p t-dim">${escapeHtml(str(f.also))}</p>` : '')
+            + `<div class="alts"><button class="alt" type="button" data-act="detail"
+                 data-kind="fleetnote" data-rec="0">${TT('What it cannot serve, and why')}</button></div>` : '')
         + (r.url ? `<div class="d-foot">${link(r.url)}</div>` : '');
     }
 

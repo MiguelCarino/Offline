@@ -308,19 +308,16 @@
 
     /* The mark sits above the motif, which reads as its underline. Both are
        aria-hidden: the navbar already says "Carino OFFLINE" in text. */
-    .ohero-mark{display:flex;flex-direction:column;align-items:center;
-      gap:min(30px,calc(13px + var(--tall) * .095));
-      margin:0 auto min(40px,calc(14px + var(--tall) * .15));}
-    .ohero-mark .mark{display:block;width:auto;
-      height:min(112px,calc(42px + var(--tall) * .39));}
-    .ohero-h{margin:0 auto min(34px,calc(13px + var(--tall) * .12));font-family:var(--display);
+    .ohero-mark{display:flex;justify-content:center;
+      margin:0 auto min(46px,calc(24px + var(--tall) * .12));}
+    .ohero-h{margin:0 auto min(36px,calc(18px + var(--tall) * .1));font-family:var(--display);
       font-weight:900;line-height:1.1;letter-spacing:-0.01em;
-      font-size:min(3.1rem,calc(1.6rem + var(--tall) * .13));}
+      font-size:min(3.3rem,calc(2.05rem + var(--tall) * .105));}
     .ohero-h span{display:block;}
     .ohero-gold{color:var(--accent);}
     .ohero-lede{margin:0 auto;color:#d4d4d4;line-height:1.6;
       max-width:min(780px,calc(660px + var(--tall) * .5));
-      font-size:min(1.16rem,calc(.9rem + var(--tall) * .0155));}
+      font-size:min(1.2rem,calc(1rem + var(--tall) * .012));}
     .ohero-lede b{color:var(--text-main);}
 
     /* ── THE MOTIF: two routes, one blocked ──
@@ -334,7 +331,7 @@
        is no JS and nothing to keep in sync. Both paths carry pathLength="100",
        which makes every offset below a percentage of the route regardless of
        what the curve actually measures. */
-    .ohero-link{display:block;width:min(370px,calc(258px + var(--tall) * .62));height:auto;
+    .ohero-link{display:block;width:min(400px,calc(300px + var(--tall) * .55));height:auto;
       aspect-ratio:240 / 72;overflow:visible;}
     .ohero-link .trace{fill:none;stroke:var(--accent);stroke-width:2;opacity:0.14;
       stroke-linecap:round;}
@@ -382,8 +379,7 @@
     @media(max-width:640px){
       body.is-start .ohero{padding:14px 0 18px;}
       .ohero-link{display:none;}
-      .ohero-mark{margin-bottom:16px;}
-      .ohero-mark .mark{height:52px;}
+      .ohero-mark{display:none;}
       .ohero-h{font-size:1.5rem;margin-bottom:14px;}
       .ohero-lede{font-size:0.88rem;line-height:1.5;}
     }
@@ -394,31 +390,41 @@
        scale would squeeze that surface to a letterbox. So on Start only, the
        wrap becomes one ordinary scrolling document — hero, search, then the
        sections — which is also how the PACS page this is modelled on reads. */
+    /* The landing has no search field. Cross-section search is what the box at
+       the top of the five tool panels is for; on a page whose whole body is
+       five buttons and a chip row there is nothing left to filter, and it was
+       the widest thing on the screen. A ?q= in the URL still routes and still
+       renders here — the hero hides and the hits take the panel. */
+    body.is-start .searchbox,body.is-start #chips{display:none;}
+    /* one centred row under the five ways in, the way the PACS chips sit */
+    .start-chips{justify-content:center;align-items:center;gap:8px;margin-top:18px;}
+    .start-chips .start-stamp{font-family:var(--mono);font-size:0.58rem;
+      letter-spacing:0.08em;text-transform:uppercase;}
+
     body.is-start .wrap{overflow-y:auto;scrollbar-width:thin;
       scrollbar-color:var(--border) transparent;}
     body.is-start .wrap::-webkit-scrollbar{width:8px;}
     body.is-start .wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
     body.is-start .panels{position:static;flex:0 0 auto;min-height:0;}
+    /* The landing is short now, so it sits in the middle of the screen rather
+       than clinging to the navbar. Auto margins rather than justify-content:
+       when the content is taller than the viewport — a phone, a 768px laptop —
+       auto margins collapse to zero, where centring would have clipped the top
+       of the hero with no way to scroll back up to it. */
+    body.is-start .ohero{margin-top:auto;}
+    body.is-start .panels{margin-bottom:auto;}
     body.is-start .panel.active{position:static;inset:auto;overflow:visible;}
 
-    /* ══ START PANEL ══ the five sections as cards, then the numbered route ══ */
-    .start-tiles{grid-template-columns:repeat(auto-fill,minmax(205px,1fr));margin-bottom:4px;}
+    /* ══ START PANEL ══ five cards and a chip row; everything else is a dialog.
+       The rules that used to squeeze this panel's rows and labels into a
+       1400x900 laptop are gone with the rows they squeezed. */
+    .start-tiles{grid-template-columns:repeat(auto-fill,minmax(205px,1fr));}
+    .start-card{padding:10px 13px;}
     .start-card .tile-dot{font-family:var(--mono);font-size:0.72rem;font-weight:700;line-height:1.5;}
     .start-card .tile-n{font-size:0.6rem;letter-spacing:0.06em;margin-top:3px;}
+    /* the numbered route now renders inside the dialog */
     .start-step .step-n{font-family:var(--mono);font-size:0.6rem;font-weight:700;color:var(--accent);
       border:1px solid var(--border-glow);border-radius:5px;padding:2px 6px;line-height:1;}
-    .start-step .copybtn{flex-shrink:0;}
-    /* This is the landing screen and it has to fit a 1400x900 laptop without
-       scrolling — measured at 656px of content against a 590px panel — so its
-       rows and labels run tighter than the list panels'. Nothing is removed:
-       the six honest limits are the last block and they were the block that
-       fell off the bottom. */
-    #startBody .row{padding:6px 12px;}
-    #startBody .d-lbl{margin:8px 0 4px;}
-    #startBody .lede{margin-bottom:5px;}
-    #startBody .lede p{margin-bottom:6px;}
-    #startBody .start-tiles{margin-bottom:0;}
-    #startBody .start-card{padding:8px 12px;}
 
     /* ══ COPYABLE CODE ══ the install line, the burn command, the rsync invocation */
     .code,code.copy{position:relative;display:block;font-family:var(--mono);font-size:0.72rem;line-height:1.6;
@@ -545,6 +551,8 @@
       flex-wrap:wrap;align-items:center;}
     #grabTiers,#stackGrid,#ironGroups,#sneakBody,#startBody{flex-shrink:0;}
     #ironRules{margin-top:18px;}
+    /* a group's pointer at the fleet tool answering the neighbouring question */
+    .group-see{margin:-4px 0 8px;font-family:var(--mono);font-size:0.66rem;line-height:1.4;}
 
   </style>
 </head>
@@ -569,13 +577,9 @@
          while a search is running, when this panel is listing hits from all
          five files and a pitch above them is only in the way. -->
     <header class="ohero" id="startHero">
-      <!-- The Carino arc, drawn rather than fetched: logo.webp is 50x50 and goes
-           soft at this size, and an inline path costs no request. -->
+      <!-- No logo above it: the navbar carries "Carino OFFLINE" in text a few
+           pixels up, and the motif is the thing here worth looking at. -->
       <div class="ohero-mark" aria-hidden="true">
-        <svg class="mark" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-          <path d="M 81.07 25.82 A 34.81 34.81 0 1 0 81.07 74.18" fill="none"
-                stroke="var(--accent)" stroke-width="16.38" stroke-linecap="butt"/>
-        </svg>
         <!-- Two routes between the same two points. The top one is cut; the
              bottom one is dashed because it is a disc in a bag. Each route is
              drawn twice — a faint trace and a bright pulse over it, the same
@@ -692,6 +696,5 @@
   <script src="carino-navbar.js" data-app="Offline" data-repo="Offline" defer></script>
   <script src="carino-lang.js" defer></script>
   <script src="i18n.js" defer></script>
-  <script src="carino-diag.js" defer></script>
 </body>
 </html>

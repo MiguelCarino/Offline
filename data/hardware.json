@@ -3,7 +3,6 @@
   "updated": "2026-08",
   "fx": 18.5,
   "currency": "MXN",
-
   "tiers": [
     {
       "id": "lean",
@@ -31,19 +30,57 @@
       "blurb": "Adds the GPU that turns the archive into something that answers questions, LTO for true cold archive, an auto disc publisher, 10 kWh of LiFePO4 with 2 kW of solar, Starlink as a second transit path, and a third replica site. Diminishing returns start here: the disc publisher only pays for itself above roughly 40 discs a month, and LTO only below about 50 TB of cold archive is a mistake — rotating HDDs plus M-DISC cover it more cheaply until then. If you take one thing from this tier into Balanced, take the GPU."
     }
   ],
-
   "groups": [
-    {"id": "compute", "label": "Compute & storage", "icon": "🖥️"},
-    {"id": "network", "label": "Network", "icon": "🛰️"},
-    {"id": "power", "label": "Power", "icon": "🔌"},
-    {"id": "optical", "label": "Optical & archive", "icon": "💿"},
-    {"id": "print", "label": "Print", "icon": "🖨️"},
-    {"id": "3d", "label": "3D printing", "icon": "🧩"},
-    {"id": "nfc", "label": "NFC & identity", "icon": "🏷️"},
-    {"id": "radio", "label": "Radio & time", "icon": "📡"},
-    {"id": "spares", "label": "Spares & terminals", "icon": "🧰"}
+    {
+      "id": "compute",
+      "label": "Compute & storage",
+      "icon": "🖥️",
+      "see": {
+        "label": "What shape of machine — Home Lab / Server profile",
+        "url": "https://hardware.carino.systems/#builds"
+      }
+    },
+    {
+      "id": "network",
+      "label": "Network",
+      "icon": "🛰️"
+    },
+    {
+      "id": "power",
+      "label": "Power",
+      "icon": "🔌"
+    },
+    {
+      "id": "optical",
+      "label": "Optical & archive",
+      "icon": "💿"
+    },
+    {
+      "id": "print",
+      "label": "Print",
+      "icon": "🖨️"
+    },
+    {
+      "id": "3d",
+      "label": "3D printing",
+      "icon": "🧩"
+    },
+    {
+      "id": "nfc",
+      "label": "NFC & identity",
+      "icon": "🏷️"
+    },
+    {
+      "id": "radio",
+      "label": "Radio & time",
+      "icon": "📡"
+    },
+    {
+      "id": "spares",
+      "label": "Spares & terminals",
+      "icon": "🧰"
+    }
   ],
-
   "items": [
     {
       "id": "node-a",
@@ -53,15 +90,33 @@
       "why": "The one machine everything else assumes. Two properties are worth paying for and both are invisible until they save you: ECC memory, because ZFS trusts what RAM hands it and a silently flipped bit gets written to all six disks at once; and IPMI on the board, because the day you need console access is the day the box will not POST and you are at the other site. The 7700 is chosen for its iGPU — Jellyfin transcodes on it, so no GPU is needed until the LLM arrives. 64 GB sounds generous until you count ZFS ARC plus twenty LXC containers plus Kiwix's page cache; it is the right floor.",
       "usd": 950,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
-      "tierSpec": {"lean": "Ryzen 5 7600, 32 GB non-ECC, consumer B650M board - no ECC, no IPMI"},
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
+      "tierSpec": {
+        "lean": "Ryzen 5 7600, 32 GB non-ECC, consumer B650M board - no ECC, no IPMI"
+      },
       "cloudFree": true,
       "mx": "CyberPuerta / PCEL / Mercado Libre",
       "alts": [
-        {"t": "Minisforum MS-01", "note": "turnkey, dual 10G SFP+ on board, but three NVMe slots and no room for spinning disks - a fine node B, a cramped node A"},
-        {"t": "Used Dell R730xd", "note": "half the price for four times the drive bays; also 150 W idle, jet-engine fans and DDR4 you cannot grow. Rack noise ends home installations."}
+        {
+          "t": "Minisforum MS-01",
+          "note": "turnkey, dual 10G SFP+ on board, but three NVMe slots and no room for spinning disks - a fine node B, a cramped node A"
+        },
+        {
+          "t": "Used Dell R730xd",
+          "note": "half the price for four times the drive bays; also 150 W idle, jet-engine fans and DDR4 you cannot grow. Rack noise ends home installations."
+        }
       ],
-      "tags": ["proxmox", "zfs", "ecc", "server", "core"]
+      "tags": [
+        "proxmox",
+        "zfs",
+        "ecc",
+        "server",
+        "core"
+      ]
     },
     {
       "id": "nvme-vm",
@@ -71,11 +126,21 @@
       "why": "Guest root filesystems and databases go here, never on the RAIDZ2 array — a RAIDZ vdev has the random IOPS of a single disk and Postgres will find that out immediately. Mirror rather than stripe: this pool holds the state that snapshots are taken from, and rebuilding a mirror is a copy while rebuilding a stripe is a restore. Insist on TLC with real DRAM; QLC drives fall off a cliff once the SLC cache fills, which is exactly when you are seeding a mirror.",
       "usd": 110,
       "qty": 2,
-      "tiers": ["lean", "balanced", "extended"],
-      "tierSpec": {"lean": "2 x 1 TB Gen4 TLC, mirrored"},
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
+      "tierSpec": {
+        "lean": "2 x 1 TB Gen4 TLC, mirrored"
+      },
       "cloudFree": true,
       "mx": "CyberPuerta / PCEL",
-      "tags": ["nvme", "zfs", "storage"]
+      "tags": [
+        "nvme",
+        "zfs",
+        "storage"
+      ]
     },
     {
       "id": "hdd-bulk-16",
@@ -85,11 +150,19 @@
       "why": "Recertified enterprise drives are the correct call at this tier and it is not a compromise: they are helium-filled 5-year-design-life units with a wiped SMART table, sold at roughly 40 percent of new, and RAIDZ2 is what makes the risk arithmetic work — two drives can die during a resilver and the pool survives. Buy from at least two batches so a manufacturing defect does not take three drives in the same week. Do not buy SMR under any circumstances; an SMR drive in a ZFS vdev turns a 12-hour resilver into a 6-day one.",
       "usd": 225,
       "qty": 6,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "spare": "one 16 TB cold spare is a separate line item - a RAIDZ2 with no spare on the shelf is a RAIDZ1 with extra steps",
       "mx": "Mercado Libre (recert sellers) / CyberPuerta for new",
-      "tags": ["hdd", "zfs", "raidz2", "storage"]
+      "tags": [
+        "hdd",
+        "zfs",
+        "raidz2",
+        "storage"
+      ]
     },
     {
       "id": "hdd-bulk-12",
@@ -99,10 +172,17 @@
       "why": "Four drives in RAIDZ1 is the smallest array that is honestly worth building, and it is a deliberate acceptance of risk: one drive of redundancy across 12 TB members means a resilver runs for the better part of a day with no margin. Size the content plan to match — 32 TB holds the Kiwix set, the distro mirrors and a media library, but not LANCache's game cache at 2-5 TB and not ArchiveBox growing unbounded. Pick what you drop before the pool does it for you at 90 percent.",
       "usd": 150,
       "qty": 4,
-      "tiers": ["lean"],
+      "tiers": [
+        "lean"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre (recert sellers)",
-      "tags": ["hdd", "zfs", "raidz1", "storage"]
+      "tags": [
+        "hdd",
+        "zfs",
+        "raidz1",
+        "storage"
+      ]
     },
     {
       "id": "hba-9300",
@@ -112,11 +192,18 @@
       "why": "ZFS wants raw disks, not a RAID controller's opinion of them. An IT-mode HBA passes SMART, TRIM and the drive's real identity straight through; a card left in IR mode hides all three and will happily present a degraded array as healthy. Buy one already flashed or flash it before it goes in the case — the flashing procedure wants a machine you are not currently using. These run hot in a fanless case: zip-tie a 40 mm fan to the heatsink and stop worrying about it.",
       "usd": 110,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "spare": "buy the second one now - these are pulled from decommissioned servers and the supply is finite",
       "mx": "Mercado Libre / AliExpress (allow 4-6 weeks)",
-      "tags": ["hba", "sas", "zfs"]
+      "tags": [
+        "hba",
+        "sas",
+        "zfs"
+      ]
     },
     {
       "id": "case-psu",
@@ -126,11 +213,19 @@
       "why": "The N4 takes six 3.5-inch drives (four of them on a hot-swap backplane, two behind a partial teardown) plus two 2.5-inch SSDs in a micro-ATX box that still fits under a desk without sounding like a server room. Note what that means for this build: six 16 TB drives fill it exactly, so the cold spare lives on a shelf and any expansion is a new chassis, not a new bay. The PSU is oversized on purpose: six drives spinning up at once pull a spike far above steady-state draw, and a Gold unit at 30 percent load runs cool enough to be the part that does not fail. Do not economise here — the PSU is the single component whose failure can take the drives with it.",
       "usd": 270,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "spare": "a cold spare PSU is 90 USD and turns a dead node into a 20-minute repair",
       "mx": "CyberPuerta / PCEL",
-      "tags": ["case", "psu", "chassis"]
+      "tags": [
+        "case",
+        "psu",
+        "chassis"
+      ]
     },
     {
       "id": "node-b",
@@ -140,11 +235,24 @@
       "why": "The replica does not need to be fast, it needs to be somewhere else. An N305 idles near 10 W, which matters when it lives in a building whose power bill is not yours and whose UPS you cannot check daily. Intel specifies 16 GB as the N305's maximum supported memory — vendors do ship 32 GB boxes and they usually work, but do not plan a replica around an off-spec configuration. Its job is to receive zfs send nightly and, on a bad day, to boot the critical guests directly from the replicated datasets. Test that boot path quarterly — an untested replica is a rumor with a power light.",
       "usd": 425,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Amazon MX / Mercado Libre",
-      "alts": [{"t": "Second-hand Optiplex Micro + DAS", "note": "cheaper and quieter, but 1 GbE only and USB-attached storage on a machine you cannot visit is a support call waiting to happen"}],
-      "tags": ["replica", "second-site", "mini-pc", "zfs-send"]
+      "alts": [
+        {
+          "t": "Second-hand Optiplex Micro + DAS",
+          "note": "cheaper and quieter, but 1 GbE only and USB-attached storage on a machine you cannot visit is a support call waiting to happen"
+        }
+      ],
+      "tags": [
+        "replica",
+        "second-site",
+        "mini-pc",
+        "zfs-send"
+      ]
     },
     {
       "id": "hdd-node-b",
@@ -154,10 +262,17 @@
       "why": "The replica holds the datasets that matter, not the whole pool — media and LANCache are re-downloadable, patient studies and git bundles are not. Sizing node B at roughly half of node A forces that decision to be made explicitly in the replication config rather than implicitly when the disk fills. Use drives from a different batch than node A's.",
       "usd": 225,
       "qty": 3,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre (recert sellers)",
-      "tags": ["hdd", "replica", "second-site"]
+      "tags": [
+        "hdd",
+        "replica",
+        "second-site"
+      ]
     },
     {
       "id": "gpu-llm",
@@ -167,11 +282,24 @@
       "why": "The best value item in this entire document. 24 GB of VRAM is the threshold where a ~30B open-weight model runs quantised at conversational speed, and that is the difference between having an archive and having a librarian — plus Whisper for transcription and Piper for TTS on the same card. A 3090 is chosen over a newer 16 GB card specifically because VRAM capacity, not compute, is the binding constraint. Budget for the power: it pulls 350 W under load, so cap it with nvidia-smi and size the UPS accordingly.",
       "usd": 750,
       "qty": 1,
-      "tiers": ["extended"],
+      "tiers": [
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre (used, test before paying)",
-      "alts": [{"t": "2 x used RTX 3060 12 GB", "note": "same total VRAM, cheaper, but split across cards - layer-splitting works and is slower, and it doubles the PCIe slots you need"}],
-      "tags": ["gpu", "llm", "ollama", "whisper", "ai"]
+      "alts": [
+        {
+          "t": "2 x used RTX 3060 12 GB",
+          "note": "same total VRAM, cheaper, but split across cards - layer-splitting works and is slower, and it doubles the PCIe slots you need"
+        }
+      ],
+      "tags": [
+        "gpu",
+        "llm",
+        "ollama",
+        "whisper",
+        "ai"
+      ]
     },
     {
       "id": "lto7",
@@ -181,10 +309,17 @@
       "why": "Tape is the only medium here with a genuine 30-year shelf life and no firmware between you and the bits. It is also the wrong purchase below roughly 50 TB of true cold archive: the drive costs more than the media it will ever hold at that scale, and used drives arrive with unknown head hours. Buy it when the cold set stops fitting on two rotating 20 TB disks, not before. If you do buy it, buy the cleaning cartridge in the same order.",
       "usd": 900,
       "qty": 1,
-      "tiers": ["extended"],
+      "tiers": [
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / eBay import (verify head hours)",
-      "tags": ["lto", "tape", "cold-archive", "backup"]
+      "tags": [
+        "lto",
+        "tape",
+        "cold-archive",
+        "backup"
+      ]
     },
     {
       "id": "site-c-kit",
@@ -194,11 +329,16 @@
       "why": "Two sites protect against a fire; three protect against a neighbourhood — the same substation, the same flood plain, the same municipal police action. Only buy this once the second site has survived a real quarterly drill, because a third unattended replica you never verify is three times the maintenance and zero times the confidence. Put it in a different city if the family logistics allow it.",
       "usd": 1580,
       "qty": 1,
-      "tiers": ["extended"],
+      "tiers": [
+        "extended"
+      ],
       "cloudFree": true,
-      "tags": ["third-site", "replica", "geo-redundancy"]
+      "tags": [
+        "third-site",
+        "replica",
+        "geo-redundancy"
+      ]
     },
-
     {
       "id": "router-rb5009",
       "group": "network",
@@ -207,13 +347,28 @@
       "why": "RouterOS is bought for two things this plan actually needs: real VLAN filtering that holds when you make a mistake, and a scripting language that can fail over WAN and rewrite firewall rules without a cloud controller anywhere in the path. It is passively cooled and runs on 24 W. The cost is the learning curve — RouterOS will let you lock yourself out of the box on the first bridge misconfiguration, so do the initial setup on a serial or MAC-telnet connection you cannot break.",
       "usd": 230,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "spare": "keep an exported .rsc config and a spare hEX on the shelf - a dead router is a total outage, not a degraded one",
       "mx": "CyberPuerta / distribuidores MikroTik MX",
       "url": "https://mikrotik.com",
-      "alts": [{"t": "OPNsense on a mini-PC", "note": "friendlier UI, better VPN tooling, but 3-4x the idle power and one more x86 machine to keep alive"}],
-      "tags": ["router", "mikrotik", "vlan", "routeros", "core"]
+      "alts": [
+        {
+          "t": "OPNsense on a mini-PC",
+          "note": "friendlier UI, better VPN tooling, but 3-4x the idle power and one more x86 machine to keep alive"
+        }
+      ],
+      "tags": [
+        "router",
+        "mikrotik",
+        "vlan",
+        "routeros",
+        "core"
+      ]
     },
     {
       "id": "switch-10g",
@@ -223,11 +378,19 @@
       "why": "The 10G link exists for exactly one workflow and it justifies itself there: restoring or seeding several terabytes between node A, the workstation and the cold drives. At 1 Gb that is a weekend; at 10 Gb it is lunch. Everything else on the network is happy at gigabit. Use DAC cables, not optics, for runs under 3 m — cheaper, cooler, and one fewer thing to clean.",
       "usd": 200,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / distribuidores MikroTik MX",
       "url": "https://mikrotik.com",
-      "tags": ["switch", "10g", "sfp+", "mikrotik"]
+      "tags": [
+        "switch",
+        "10g",
+        "sfp+",
+        "mikrotik"
+      ]
     },
     {
       "id": "switch-poe",
@@ -237,11 +400,20 @@
       "why": "The access layer for everything that is not the storage node: APs, the kiosk, the workstation, the GPS-NTP Pi. 2.5 GbE here is not for speed, it is for not having to re-cable in 2030, and the two SFP+ cages uplink it to the 10G core. Know the limitation before you plan the cabling: this switch takes PoE in on port 1, it does not hand PoE out, so the access points and the Pi need their own injectors or supplied adapters. Budget those, and put them on the UPS with the switch — one protected outlet strip at the edge beats five wall warts on five unprotected sockets.",
       "usd": 190,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / distribuidores MikroTik MX",
       "url": "https://mikrotik.com",
-      "tags": ["switch", "2.5g", "access", "mikrotik"]
+      "tags": [
+        "switch",
+        "2.5g",
+        "access",
+        "mikrotik"
+      ]
     },
     {
       "id": "wifi-ap",
@@ -251,11 +423,20 @@
       "why": "Chosen because it is managed by the router you already own, on the LAN, with no vendor controller and no account — the same reason a Unifi setup is rejected here despite being nicer to configure. Multiple SSIDs map onto the VLAN plan directly: trusted, guest, and a separate IoT SSID that has no route off VLAN 40. Ceiling-mount them; an AP on a shelf behind a monitor is a 40 percent coverage loss for free.",
       "usd": 130,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / distribuidores MikroTik MX",
       "url": "https://mikrotik.com",
-      "tags": ["wifi", "ap", "capsman", "mikrotik"]
+      "tags": [
+        "wifi",
+        "ap",
+        "capsman",
+        "mikrotik"
+      ]
     },
     {
       "id": "wifi-ap-extra",
@@ -265,10 +446,17 @@
       "why": "Mexican construction is brick, concrete and rebar; a single AP that covers a wooden house covers one and a half rooms here. Three APs on a wired backhaul beats any mesh repeater arrangement, because a repeater halves throughput on every hop and the failure mode is a slow network rather than an obviously broken one. Run the cable while the walls are open.",
       "usd": 130,
       "qty": 2,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / distribuidores MikroTik MX",
-      "tags": ["wifi", "ap", "coverage"]
+      "tags": [
+        "wifi",
+        "ap",
+        "coverage"
+      ]
     },
     {
       "id": "cabling",
@@ -278,11 +466,22 @@
       "why": "The cheapest line here and the one that determines whether the rest is maintainable in five years. Solid Cat6A in the walls, stranded patch leads at the ends, every run terminated on a panel and labelled at both ends with the same identifier that goes on the asset label and in Topo. Buy the tester; tracing an intermittent run without one costs more hours than the tester costs pesos.",
       "usd": 150,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
-      "tierSpec": {"lean": "Cat6A patch leads and a 12-port panel - one room, no in-wall runs"},
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
+      "tierSpec": {
+        "lean": "Cat6A patch leads and a 12-port panel - one room, no in-wall runs"
+      },
       "cloudFree": true,
       "mx": "Steren / PCEL / CyberPuerta",
-      "tags": ["cabling", "cat6a", "patch-panel", "labels"]
+      "tags": [
+        "cabling",
+        "cat6a",
+        "patch-panel",
+        "labels"
+      ]
     },
     {
       "id": "dac-sfp",
@@ -292,10 +491,17 @@
       "why": "MikroTik does not vendor-lock SFP cages, so generic DACs work — which is worth stating because on Cisco or Juniper gear this line item triples. Keep one spare DAC: they fail rarely, but when a 10G link goes down the cable is the first thing you want to swap rather than the first thing you want to order.",
       "usd": 70,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Mercado Libre",
-      "tags": ["sfp+", "dac", "10g"]
+      "tags": [
+        "sfp+",
+        "dac",
+        "10g"
+      ]
     },
     {
       "id": "lte-failover",
@@ -305,10 +511,19 @@
       "why": "Not resilience against censorship — a cellular carrier is filtered as easily as an ISP, and more easily identified. It exists for the two things that genuinely cannot go offline: CFDI 4.0 stamping against SAT, and pulling mirror deltas when the fibre is cut rather than blocked. Configure it as a metered failover with the firewall marking which traffic is allowed to use it, or the first Windows update will eat the data plan in an afternoon.",
       "usd": 130,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Telcel / Mercado Libre",
-      "tags": ["lte", "failover", "wan", "cfdi", "sat"]
+      "tags": [
+        "lte",
+        "failover",
+        "wan",
+        "cfdi",
+        "sat"
+      ]
     },
     {
       "id": "starlink",
@@ -318,13 +533,19 @@
       "why": "A different transit path, not a censorship-proof one. It is a registered service with a known subscriber, a national gateway, and a company that complies with local law — treat it as insurance against a cut cable or a failed local ISP, and never as the answer to a blocked domain. Mexican residential service runs roughly MXN 1,100-1,350 a month, which makes it the largest recurring line in this plan — on a par with the whole rack's electricity bill, for a link nothing internal is allowed to depend on.",
       "usd": 400,
       "qty": 1,
-      "tiers": ["extended"],
+      "tiers": [
+        "extended"
+      ],
       "cloudFree": false,
       "escape": "There is none - the terminal is inert without the subscription and the vendor's ground network. Buy it as a WAN path, keep nothing internal depending on it, and expect it to be blockable by the same authority that blocks your ISP.",
       "mx": "Starlink MX (envío directo)",
-      "tags": ["wan", "satellite", "transit", "recurring"]
+      "tags": [
+        "wan",
+        "satellite",
+        "transit",
+        "recurring"
+      ]
     },
-
     {
       "id": "ups-primary",
       "group": "power",
@@ -333,10 +554,19 @@
       "why": "The UPS is not there to keep the server running through an outage; it is there to shut it down cleanly, and that requires the USB cable and a configured NUT daemon, which is the half everyone skips. Without it you own a battery that delays the unclean shutdown by nine minutes. Set the shutdown order deliberately: guests first, then the pool export, then the hypervisor, then the switch. Batteries are consumable — put a three-year replacement reminder in the calendar on the day you install it.",
       "usd": 230,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / PCEL / Office Depot MX",
-      "tags": ["ups", "nut", "shutdown", "power"]
+      "tags": [
+        "ups",
+        "nut",
+        "shutdown",
+        "power"
+      ]
     },
     {
       "id": "ups-site-b",
@@ -346,10 +576,17 @@
       "why": "The replica is in a building you do not stand in every day, which is precisely why it gets the same protection as the primary. An unprotected node B corrupts its pool during a brownout, and you find out on the night you need it. Same model as the primary on purpose: one battery SKU to stock, one shutdown script to maintain.",
       "usd": 230,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / PCEL",
-      "tags": ["ups", "second-site", "power"]
+      "tags": [
+        "ups",
+        "second-site",
+        "power"
+      ]
     },
     {
       "id": "lfp-station",
@@ -359,12 +596,20 @@
       "why": "Bridges the gap between the UPS's nine minutes and a genuine multi-hour cut, which in most of Mexico is the common case rather than the rare one. LFP is specified over NMC for a reason: 3000+ cycles instead of 500, and it does not vent when it is stored at 40 C in a closet. Run the router, the switch, the AP and the GPS-NTP Pi from it — roughly 60 W of critical load gives you most of a working day — and let the server ride on the UPS and shut down.",
       "usd": 620,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "escape": "Fully operable from the front panel with no app and no account; only remote monitoring and firmware updates want the cloud. Configure it once by app if you must, then keep it off any network.",
       "mx": "Amazon MX / Mercado Libre",
       "url": "https://www.ecoflow.com",
-      "tags": ["lifepo4", "battery", "outage", "power"]
+      "tags": [
+        "lifepo4",
+        "battery",
+        "outage",
+        "power"
+      ]
     },
     {
       "id": "lfp-solar",
@@ -374,12 +619,18 @@
       "why": "The point at which the building stops caring about CFE for anything except the aircon. 10 kWh carries the full rack, the network, the kiosk and the fridge overnight, and 2 kW of panels replaces it in a Mexican afternoon with room to spare. This is a permanent installation with an electrician, a CFE interconnection decision and roof penetrations — budget the labour separately and do not treat it as a plug-in appliance.",
       "usd": 4500,
       "qty": 1,
-      "tiers": ["extended"],
+      "tiers": [
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Instalador local / Enertik MX",
-      "tags": ["solar", "lifepo4", "off-grid", "power"]
+      "tags": [
+        "solar",
+        "lifepo4",
+        "off-grid",
+        "power"
+      ]
     },
-
     {
       "id": "bd-burner-int",
       "group": "optical",
@@ -388,11 +639,20 @@
       "why": "The production burner, mounted in a workstation on the wired LAN so the burn-verify-PAR2-label pipeline is scripted rather than manual. Pioneer is specified because its BDXL and M-DISC write strategies are the ones the archival community has actually verified, and because opc quality varies enormously between OEMs at 100 GB. Burn at 4x, never at maximum — write quality at speed is the difference between a disc that reads in ten years and one that does not.",
       "usd": 120,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "spare": "buy a cold spare now - optical drive production is winding down industry-wide and a burner bought in 2026 may be unbuyable in 2031",
       "mx": "CyberPuerta / Mercado Libre",
-      "tags": ["blu-ray", "burner", "bdxl", "m-disc", "sneakernet"]
+      "tags": [
+        "blu-ray",
+        "burner",
+        "bdxl",
+        "m-disc",
+        "sneakernet"
+      ]
     },
     {
       "id": "bd-burner-spare",
@@ -402,10 +662,18 @@
       "why": "This is purchasing rule 2 made into a line item, and it is the one people cut first and regret longest. Media outlives drives: your M-DISC set is rated for decades and the mechanism that reads it is rated for a few thousand hours and is leaving the market. A hundred discs you cannot read is a shelf of coasters. Leave it sealed; a spare you have been using is not a spare.",
       "usd": 120,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Mercado Libre",
-      "tags": ["spare", "blu-ray", "burner", "rule-2"]
+      "tags": [
+        "spare",
+        "blu-ray",
+        "burner",
+        "rule-2"
+      ]
     },
     {
       "id": "bd-burner-ext",
@@ -415,11 +683,20 @@
       "why": "The portable half of the sneakernet layer: it goes to the client, to the second site, or into the go-bag, and it works from a laptop with no drivers on Linux, macOS and Windows. Slot-loading slim drives write more slowly than a half-height internal — plan two hours for a 100 GB BDXL — but the ability to hand someone a disc in their office is worth more than the wait.",
       "usd": 200,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "spare": "at the Lean tier this is the only burner you own - buy the second one now, or accept that a dead drive means an unreadable archive",
       "mx": "CyberPuerta / Amazon MX",
-      "tags": ["blu-ray", "external", "portable", "sneakernet"]
+      "tags": [
+        "blu-ray",
+        "external",
+        "portable",
+        "sneakernet"
+      ]
     },
     {
       "id": "duplicator",
@@ -429,10 +706,18 @@
       "why": "The moment you are pressing more than about five copies of anything, a script driving one burner becomes the bottleneck in your day. A standalone tower copies without a PC attached, verifies on read-back, and lets the workstation get on with something else. It is also three more drive mechanisms in the building, which given rule 2 is a feature rather than an expense.",
       "usd": 340,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / import",
-      "tags": ["duplicator", "blu-ray", "production", "sneakernet"]
+      "tags": [
+        "duplicator",
+        "blu-ray",
+        "production",
+        "sneakernet"
+      ]
     },
     {
       "id": "disc-publisher",
@@ -442,10 +727,17 @@
       "why": "Loads 50 blanks, burns, prints the face, and stacks them, unattended. It only makes sense above roughly 40 finished discs a month — below that the tower plus the EcoTank does the same work for a tenth of the money and about two hours of your attention per batch. Buy it when disc volume is a business line, not before; it is the single most deferrable item in the Extended tier.",
       "usd": 2400,
       "qty": 1,
-      "tiers": ["extended"],
+      "tiers": [
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Distribuidor Epson MX / import",
-      "tags": ["publisher", "epson", "production", "sneakernet"]
+      "tags": [
+        "publisher",
+        "epson",
+        "production",
+        "sneakernet"
+      ]
     },
     {
       "id": "media-bdxl",
@@ -455,10 +747,18 @@
       "why": "The bulk distribution format: a full library set, a media collection, a mirror snapshot. Verbatim's 100 GB BDXL is the reliable line — the cheap unbranded 100 GB discs have a genuinely different failure rate and you will discover it at the read-back verify, after the burn. Standardise on one SKU per purchasing rule 4 so that burn profiles, PAR2 sizing and the label template never change.",
       "usd": 12,
       "qty": 25,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Amazon MX",
-      "tags": ["bdxl", "media", "consumable", "sneakernet"]
+      "tags": [
+        "bdxl",
+        "media",
+        "consumable",
+        "sneakernet"
+      ]
     },
     {
       "id": "media-mdisc",
@@ -468,10 +768,19 @@
       "why": "Crown jewels only: git bundles of every fleet repo, the encrypted and split step-ca root, the Vaultwarden export, DNS zone files, the current Offline Edition ISO. The inorganic recording layer is what makes the century claim; realistically it means decades in a warm Mexican closet, which is decades longer than a hard drive. Ten discs is more than the crown jewel set needs — that is deliberate, because the set gets burned fresh every quarter and the old copies stay in the safe.",
       "usd": 20,
       "qty": 10,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Amazon MX",
-      "tags": ["m-disc", "archival", "crown-jewels", "backup"]
+      "tags": [
+        "m-disc",
+        "archival",
+        "crown-jewels",
+        "backup"
+      ]
     },
     {
       "id": "media-dvdr",
@@ -481,10 +790,20 @@
       "why": "Still the correct format for wide, cheap handouts and for legacy medical equipment — plenty of imaging devices in Mexican clinics read DVD and nothing newer, and a patient study on a DVD is the interchange format the referring doctor's office can actually open. Sixty centavos a disc means you never hesitate to hand one over, which is the entire point of the sneakernet layer.",
       "usd": 0.6,
       "qty": 100,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Office Depot MX",
-      "tags": ["dvd", "media", "handout", "dicom", "clinic"]
+      "tags": [
+        "dvd",
+        "media",
+        "handout",
+        "dicom",
+        "clinic"
+      ]
     },
     {
       "id": "media-bdr25",
@@ -494,10 +813,19 @@
       "why": "The Fleet Offline Edition ISO fits here with room to spare, which makes 25 GB the single-title handout format: one disc, one tool set, one printed face with the SHA-256 short hash on it. Cheap enough to give away, large enough that you are not splitting an archive across discs — the format whose failure mode is losing one disc rather than losing a set.",
       "usd": 1.2,
       "qty": 50,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Amazon MX",
-      "tags": ["bd-r", "media", "iso", "handout"]
+      "tags": [
+        "bd-r",
+        "media",
+        "iso",
+        "handout"
+      ]
     },
     {
       "id": "cold-hdd",
@@ -507,10 +835,20 @@
       "why": "The copy that is not plugged in. Ransomware, a bad zfs destroy and a lightning strike all share one property: they only reach hardware that is connected. Encrypt it with LUKS — an unencrypted backup drive is a data breach waiting for a burglary — and write the restic snapshot ID and the date on masking tape on the case, because the day you need it you will not want to mount three drives to find out which is current.",
       "usd": 330,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Amazon MX / Costco MX",
-      "tags": ["backup", "cold", "luks", "restic", "3-2-1"]
+      "tags": [
+        "backup",
+        "cold",
+        "luks",
+        "restic",
+        "3-2-1"
+      ]
     },
     {
       "id": "cold-hdd-second",
@@ -520,10 +858,18 @@
       "why": "Rotation only works with two: one is off-premises while the other is being written, and they swap monthly. With a single drive there is a window each month where the offsite copy is in your hands in a car, which is exactly when the fire happens in the story. The hard case is not paranoia — a bare 3.5-inch drive dropped from desk height onto tile is a dead drive.",
       "usd": 390,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Amazon MX",
-      "tags": ["backup", "offsite", "rotation", "3-2-1"]
+      "tags": [
+        "backup",
+        "offsite",
+        "rotation",
+        "3-2-1"
+      ]
     },
     {
       "id": "media-safe",
@@ -533,12 +879,19 @@
       "why": "Buy a media-rated safe, not a paper-rated one, and know the difference or waste the money: a document safe keeps its interior below 177 C, which chars nothing and destroys every disc, drive and tape inside it. Media rating targets roughly 52 C. This is where the M-DISC crown-jewel set, the printed emergency runbook, the split root-CA key and the sealed spare burner live.",
       "usd": 210,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / Office Depot MX",
-      "tags": ["safe", "fireproof", "crown-jewels", "physical-security"]
+      "tags": [
+        "safe",
+        "fireproof",
+        "crown-jewels",
+        "physical-security"
+      ]
     },
-
     {
       "id": "laser-mono",
       "group": "print",
@@ -547,10 +900,19 @@
       "why": "The workhorse for manuals, runbooks and IP cards. Brother is specified for one concrete reason: the driver-free path works — it speaks IPP Everywhere and PostScript, so CUPS on the server drives it with no vendor software and no firmware that decides to check in. High-yield toner is 8000 pages, which makes stockpiling per rule 4 cheap and the cost per page low enough that printing the runbook again after every change is a non-decision.",
       "usd": 340,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Office Depot MX",
-      "tags": ["printer", "laser", "cups", "ipp", "manuals"]
+      "tags": [
+        "printer",
+        "laser",
+        "cups",
+        "ipp",
+        "manuals"
+      ]
     },
     {
       "id": "laser-used",
@@ -560,10 +922,17 @@
       "why": "At the Lean tier a used network laser off Mercado Libre does the job for a fifth of the price, and toner for the older Brother line is abundant and cheap. Check two things before paying: that it has an Ethernet port rather than Wi-Fi only, and the page count on the config sheet. Under 20000 pages on a laser is barely used.",
       "usd": 100,
       "qty": 1,
-      "tiers": ["lean"],
+      "tiers": [
+        "lean"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre (usado)",
-      "tags": ["printer", "laser", "used", "budget"]
+      "tags": [
+        "printer",
+        "laser",
+        "used",
+        "budget"
+      ]
     },
     {
       "id": "ecotank",
@@ -573,10 +942,19 @@
       "why": "Bought for the disc tray, not the photos. Every disc that leaves the building carries a printed face with title, date, short hash and a QR to the intranet index — that is what separates an archive from a pile of unlabelled discs in three years. EcoTank means bottled ink at a fraction of cartridge cost, which matters when you are printing disc faces in batches. Drive it over IPP from CUPS and leave Epson Connect switched off.",
       "usd": 630,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Office Depot MX / Amazon MX",
-      "tags": ["printer", "inkjet", "disc-printing", "labels", "sneakernet"]
+      "tags": [
+        "printer",
+        "inkjet",
+        "disc-printing",
+        "labels",
+        "sneakernet"
+      ]
     },
     {
       "id": "label-printer",
@@ -586,10 +964,18 @@
       "why": "Every device gets a label with hostname, IP, MAC, purchase date and a QR to its inventory record. This sounds like housekeeping until the night you are diagnosing a switch port by torchlight. Thermal means no consumable except the roll, and the network interface means it is driven from a script on the server rather than from one laptop that has the software installed.",
       "usd": 200,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Amazon MX",
-      "tags": ["labels", "asset-tags", "inventory", "topo"]
+      "tags": [
+        "labels",
+        "asset-tags",
+        "inventory",
+        "topo"
+      ]
     },
     {
       "id": "finishing",
@@ -599,10 +985,18 @@
       "why": "The IP card is a laminated credit-card-sized artifact that lives in a wallet for years and survives a pocket; unlaminated it survives a month. The binder turns a stack of pages into a manual that ships in the box with an appliance, which is a visible quality difference to a client for about 12 pesos of consumables. Cheap machines, disproportionate effect on how the physical layer is received.",
       "usd": 170,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Office Depot MX / Mercado Libre",
-      "tags": ["laminator", "binding", "ip-card", "manuals"]
+      "tags": [
+        "laminator",
+        "binding",
+        "ip-card",
+        "manuals"
+      ]
     },
     {
       "id": "consumables-y1",
@@ -612,10 +1006,19 @@
       "why": "Budgeted as a line item because it is the cost that surprises people after the printers are bought. Standardise on one toner SKU and one paper stock per rule 4 so that stockpiling six months of it is a single order at a predictable price, and so that a supply shortage is visible as one number rather than five.",
       "usd": 150,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Office Depot MX / CyberPuerta",
-      "tags": ["consumables", "toner", "paper", "rule-4"]
+      "tags": [
+        "consumables",
+        "toner",
+        "paper",
+        "rule-4"
+      ]
     },
     {
       "id": "consumables-production",
@@ -625,12 +1028,19 @@
       "why": "The marginal cost of actually running the sneakernet line rather than owning the equipment for it. Once discs and printed inserts are going out to clients, this becomes a per-unit cost you can quote against; track it from the first batch so the appliance pricing is based on a measured number instead of a guess.",
       "usd": 200,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Office Depot MX",
-      "tags": ["consumables", "ink", "production", "unit-cost"]
+      "tags": [
+        "consumables",
+        "ink",
+        "production",
+        "unit-cost"
+      ]
     },
-
     {
       "id": "fdm-prusa",
       "group": "3d",
@@ -639,12 +1049,26 @@
       "why": "Chosen over the faster and cheaper Bambu specifically because LAN-only operation is a property of the machine rather than a vendor policy that can change in a firmware release. It sits on VLAN 40 with no route to the internet, sliced locally in PrusaSlicer, driven by PrusaLink or Klipper. The enclosed Core One is worth the premium if you print ASA or ABS — warping and fumes are both enclosure problems. This machine pays for itself printing replacement clips, knobs and brackets for client hardware that would otherwise be a six-week import.",
       "usd": 1050,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Distribuidor Prusa MX / envío directo",
       "url": "https://www.prusa3d.com",
-      "alts": [{"t": "Voron 2.4 self-build", "note": "fully open, completely local, better printer at the end - and 60+ hours of building before it prints anything you need"}],
-      "tags": ["3d-print", "fdm", "prusa", "spare-parts", "lan-only"]
+      "alts": [
+        {
+          "t": "Voron 2.4 self-build",
+          "note": "fully open, completely local, better printer at the end - and 60+ hours of building before it prints anything you need"
+        }
+      ],
+      "tags": [
+        "3d-print",
+        "fdm",
+        "prusa",
+        "spare-parts",
+        "lan-only"
+      ]
     },
     {
       "id": "fdm-a1",
@@ -654,12 +1078,20 @@
       "why": "Half the price, better out-of-box print quality, and a compromise on rule 1 that should be made with open eyes: LAN mode works today, and it works because Bambu currently permits it. Firmware updates have narrowed it before. Buy it if the budget forces the choice, put it on VLAN 40 with no WAN route from the first minute, slice in OrcaSlicer locally, and never update the firmware from a machine that can reach the internet.",
       "usd": 400,
       "qty": 1,
-      "tiers": ["lean"],
+      "tiers": [
+        "lean"
+      ],
       "cloudFree": false,
       "escape": "Enable LAN-only mode in the printer's settings before it ever reaches the internet, drive it with OrcaSlicer over the local network, and block VLAN 40 at the router. Accept that a future firmware could restrict this - which is exactly why the Balanced tier buys a Prusa instead.",
       "mx": "Mercado Libre / Amazon MX",
       "url": "https://bambulab.com",
-      "tags": ["3d-print", "fdm", "bambu", "budget", "cloud-risk"]
+      "tags": [
+        "3d-print",
+        "fdm",
+        "bambu",
+        "budget",
+        "cloud-risk"
+      ]
     },
     {
       "id": "filament",
@@ -669,10 +1101,19 @@
       "why": "Three to six months of stock, because filament is exactly the kind of import that gets slow first. PETG is the default for enclosures and brackets — tougher than PLA and it does not sag in a car or a closet in Guadalajara in May. ASA for anything that sees sun. PLA only for jigs and prototypes. Standardise on one brand per material per rule 4 so profiles carry over and a colour change is not a calibration session.",
       "usd": 25,
       "qty": 6,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "3D Printing MX / Mercado Libre",
-      "tags": ["filament", "petg", "asa", "consumable"]
+      "tags": [
+        "filament",
+        "petg",
+        "asa",
+        "consumable"
+      ]
     },
     {
       "id": "filament-dry",
@@ -682,10 +1123,19 @@
       "why": "Humidity in most of Mexico will ruin an open spool of PETG or ASA in a season — the symptom is popping during extrusion and parts that snap under finger pressure, and by then the spool is scrap. Sealed boxes with rechargeable desiccant are a rounding error against the filament they protect. Store sealed, print from a dry box, recharge the silica monthly.",
       "usd": 110,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / Amazon MX",
-      "tags": ["filament", "humidity", "storage", "mexico"]
+      "tags": [
+        "filament",
+        "humidity",
+        "storage",
+        "mexico"
+      ]
     },
     {
       "id": "resin-printer",
@@ -695,13 +1145,21 @@
       "why": "For the parts FDM cannot do: connector shrouds, fine mechanical detail, and DICOM-derived anatomical models where surface accuracy is the point. The real cost is not the printer, it is the process — resin is a skin sensitiser, needs gloves and ventilation, and the wash/cure step is mandatory rather than optional. Do not buy it for a room without a window, and do not buy it at all until FDM is boring.",
       "usd": 320,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / Amazon MX",
       "url": "https://www.elegoo.com",
-      "tags": ["3d-print", "resin", "dicom", "anatomical", "ppe"]
+      "tags": [
+        "3d-print",
+        "resin",
+        "dicom",
+        "anatomical",
+        "ppe"
+      ]
     },
-
     {
       "id": "nfc-reader",
       "group": "nfc",
@@ -710,10 +1168,19 @@
       "why": "The bulk encoder. Driven by nfcpy on a LAN machine, it writes NDEF URI records to a hundred tags from a CSV in one pass — which is the only way the tag rollout actually happens rather than staying a good idea. The PN532 spare is four dollars and covers the case where the ACR122U's driver situation on a given kernel turns into an afternoon.",
       "usd": 80,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / AliExpress",
-      "tags": ["nfc", "ndef", "nfcpy", "encoder"]
+      "tags": [
+        "nfc",
+        "ndef",
+        "nfcpy",
+        "encoder"
+      ]
     },
     {
       "id": "flipper",
@@ -723,11 +1190,19 @@
       "why": "A field diagnostic tool, not a toy: it reads whatever badge, fob or remote a client hands you and tells you what protocol it is before you commit to supporting it. Everything it does works standalone with no phone and no account. Two practical notes — it is a customs-sensitive import into Mexico, and pointing it at anything you do not own is a legal problem rather than a technical one.",
       "usd": 210,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / import (verify customs)",
       "url": "https://flipper.net/",
-      "tags": ["nfc", "rfid", "diagnostics", "field"]
+      "tags": [
+        "nfc",
+        "rfid",
+        "diagnostics",
+        "field"
+      ]
     },
     {
       "id": "tags-ntag215",
@@ -737,10 +1212,20 @@
       "why": "The tap-to-open layer: a sticker on the desk that opens Retina, one at reception that joins the Wi-Fi with an NDEF Wi-Fi record and no whiteboard password, one on every device pointing at its inventory record. NTAG215's 504 bytes is the sweet spot — enough for a URI plus a vCard, universally readable by phones. Every tag gets a printed QR twin on the same surface, because not every phone has usable NFC and every phone has a camera.",
       "usd": 0.35,
       "qty": 200,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / AliExpress",
-      "tags": ["nfc", "ntag215", "tap-to-open", "wifi", "qr"]
+      "tags": [
+        "nfc",
+        "ntag215",
+        "tap-to-open",
+        "wifi",
+        "qr"
+      ]
     },
     {
       "id": "tags-cards-discs",
@@ -750,12 +1235,20 @@
       "why": "PVC cards are the customer-facing artifacts: contact cards that work with no internet on the recipient's phone, and the entitlement token shipped with an appliance — a physical support-contract ID signed at issue, so there is no licence server anywhere in the product. The NTAG216 discs are on-metal rated, which matters because a normal tag stuck to a server chassis or a loaner laptop simply does not read.",
       "usd": 90,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / proveedor de credencializacion",
-      "tags": ["nfc", "pvc-card", "entitlement", "on-metal", "vcard"]
+      "tags": [
+        "nfc",
+        "pvc-card",
+        "entitlement",
+        "on-metal",
+        "vcard"
+      ]
     },
-
     {
       "id": "meshtastic",
       "group": "radio",
@@ -764,11 +1257,21 @@
       "why": "The cheapest genuine resilience in this entire document. Two nodes, no infrastructure, no licence, no carrier — encrypted text between them over 2 to 15 km depending on line of sight, running for days on a small battery. It is text only and it is slow, and that is the correct expectation: it is for coordinating between the two sites when everything else is down, not for moving data. Print the enclosures on the FDM printer.",
       "usd": 48,
       "qty": 2,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / AliExpress",
       "url": "https://meshtastic.org",
-      "tags": ["lora", "meshtastic", "915mhz", "off-grid", "comms"]
+      "tags": [
+        "lora",
+        "meshtastic",
+        "915mhz",
+        "off-grid",
+        "comms"
+      ]
     },
     {
       "id": "meshtastic-extra",
@@ -778,10 +1281,18 @@
       "why": "A two-node mesh is a link; a four-node mesh is a network with a path around an obstruction. Put one on a roof or a hill as a solar-powered repeater with no user attached to it — that single node is usually what turns 2 km of real-world range into 10. The fourth is a spare and a portable.",
       "usd": 47,
       "qty": 2,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / AliExpress",
-      "tags": ["lora", "meshtastic", "repeater", "solar"]
+      "tags": [
+        "lora",
+        "meshtastic",
+        "repeater",
+        "solar"
+      ]
     },
     {
       "id": "gps-ntp",
@@ -791,12 +1302,22 @@
       "why": "The most underrated ninety dollars in this plan. Cut the internet and every clock in the building starts drifting; a few weeks later TLS handshakes fail on validity windows, TOTP codes stop matching, DICOM timestamps disagree between modalities and log correlation becomes fiction — and none of those symptoms points at the clock. A PPS-disciplined Pi holds microsecond accuracy from satellites, indefinitely, with no network at all. Run the antenna to a window or the roof; GPS does not work in a rack.",
       "usd": 90,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre / 330ohms",
-      "tags": ["ntp", "gps", "pps", "chrony", "time", "underrated"]
+      "tags": [
+        "ntp",
+        "gps",
+        "pps",
+        "chrony",
+        "time",
+        "underrated"
+      ]
     },
-
     {
       "id": "kiosk",
       "group": "spares",
@@ -805,10 +1326,19 @@
       "why": "A machine in the waiting room or the hallway that boots straight into the intranet hub in kiosk mode, with an NFC tag and a QR beside it. This is what makes the offline library a thing people use rather than a thing you tell them about — Kiwix, the media library and the fleet tools with no login and nothing to install. For the commercial side it is also the demo: the client uses the product before they buy the box.",
       "usd": 420,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "CyberPuerta / Mercado Libre",
-      "tags": ["kiosk", "terminal", "hub", "kiwix", "demo"]
+      "tags": [
+        "kiosk",
+        "terminal",
+        "hub",
+        "kiwix",
+        "demo"
+      ]
     },
     {
       "id": "spares-kit",
@@ -818,10 +1348,20 @@
       "why": "Warranty is not a plan when RMA needs shipping and an internet connection. The test for this shelf is specific: can you bring node A back up on a Sunday with the shops closed? That means a PSU, a NIC, the cables that are always the wrong length, and the fans that are the most common thing to actually fail. Label everything and keep it in one box, not scattered across three drawers.",
       "usd": 175,
       "qty": 1,
-      "tiers": ["lean", "balanced", "extended"],
+      "tiers": [
+        "lean",
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "PCEL / CyberPuerta / Steren",
-      "tags": ["spares", "psu", "fans", "cables", "rule-2"]
+      "tags": [
+        "spares",
+        "psu",
+        "fans",
+        "cables",
+        "rule-2"
+      ]
     },
     {
       "id": "spare-hdd",
@@ -831,10 +1371,18 @@
       "why": "The clock that starts when a drive fails is the resilver window, and during it a RAIDZ2 has the redundancy of a RAIDZ1. A spare on the shelf turns that window from days of waiting for a delivery into the twenty minutes it takes to walk to the rack. Buy it with the array, from a different batch, and test it once before it goes on the shelf — an untested spare is a spare-shaped object.",
       "usd": 225,
       "qty": 1,
-      "tiers": ["balanced", "extended"],
+      "tiers": [
+        "balanced",
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "Mercado Libre (recert sellers)",
-      "tags": ["spare", "hdd", "resilver", "rule-2"]
+      "tags": [
+        "spare",
+        "hdd",
+        "resilver",
+        "rule-2"
+      ]
     },
     {
       "id": "rack-12u",
@@ -844,13 +1392,19 @@
       "why": "At one site the Jonsbo lives on a shelf and that is fine. At three sites the rack is a discipline rather than furniture: fixed positions, labelled patch runs, and a metered PDU that tells you the real draw per outlet — which is how you size the battery bank honestly instead of by adding up nameplate ratings. Wall-mount over floor-standing for a building that is not a data centre.",
       "usd": 380,
       "qty": 1,
-      "tiers": ["extended"],
+      "tiers": [
+        "extended"
+      ],
       "cloudFree": true,
       "mx": "PCEL / Mercado Libre / Panduit MX",
-      "tags": ["rack", "pdu", "power-metering", "cable-management"]
+      "tags": [
+        "rack",
+        "pdu",
+        "power-metering",
+        "cable-management"
+      ]
     }
   ],
-
   "rules": [
     {
       "t": "No cloud-tethered hardware",
@@ -869,7 +1423,6 @@
       "d": "One toner SKU, one filament brand per material, one printable disc SKU, one paper stock, one UPS battery type. This is what makes stockpiling three to six months cheap and predictable rather than a research project each time, and it is what lets you notice a supply problem as a single number instead of five. It also means burn profiles, slicer profiles and label templates never have to be re-derived because a colour changed."
     }
   ],
-
   "recurring": [
     {
       "t": "Offshore VPS (bridge/relay)",
