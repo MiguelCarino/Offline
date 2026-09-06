@@ -406,12 +406,18 @@
     body.is-start .wrap::-webkit-scrollbar{width:8px;}
     body.is-start .wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
     body.is-start .panels{position:static;flex:0 0 auto;min-height:0;}
-    /* The landing is short now, so it sits in the middle of the screen rather
-       than clinging to the navbar. Auto margins rather than justify-content:
+    /* Anchored to the top, with the surplus collecting at the bottom. Only the
+       BOTTOM margin is auto: the pair of them centred the block, which put 255px
+       of nothing between the navbar and the mark on a 1260px-tall screen and
+       slid the whole landing further down the taller the screen got — a page
+       that floats in the middle of its own frame reads as one that has come
+       loose from its header. The hero's own top padding is the gap now, and it
+       already grows with --tall.
+
+       Auto margin rather than justify-content, and that reason is unchanged:
        when the content is taller than the viewport — a phone, a 768px laptop —
-       auto margins collapse to zero, where centring would have clipped the top
-       of the hero with no way to scroll back up to it. */
-    body.is-start .ohero{margin-top:auto;}
+       an auto margin collapses to zero, where centring would have clipped the
+       top of the hero with no way to scroll back up to it. */
     body.is-start .panels{margin-bottom:auto;}
     body.is-start .panel.active{position:static;inset:auto;overflow:visible;}
 
