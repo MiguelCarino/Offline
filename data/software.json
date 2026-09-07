@@ -1573,6 +1573,33 @@
       ]
     },
     {
+      "id": "aldis-lamp",
+      "role": "comms",
+      "name": "Aldis Lamp",
+      "icon": "🔦",
+      "does": "Speech turned into Morse on a signal lamp, with a camera decoder to read one back",
+      "why": "The floor beneath everything else in this section: line-of-sight optical signalling needs no spectrum, no licence, no infrastructure and no second device that has to survive the same event. It is what Meshtastic itself falls back to, and it reaches a ship or a ridge that has nothing but eyes. Set expectations correctly on one point — the browser normally sends speech to a server, so on-device recognition has to be installed while there is still a connection. The lamp, the camera decoder and typed text never needed one. Slow by nature: 6–12 words a minute is real signalling speed, so agree on your procedure signals first.",
+      "offline": "full",
+      "license": "AGPL-3.0",
+      "lang": "HTML, JavaScript",
+      "platform": [
+        "static",
+        "android",
+        "ios",
+        "usb"
+      ],
+      "disk": "under 5 MB",
+      "install": "Open aldis.carino.systems once and add it to the home screen; it precaches itself. Or serve the repo: python3 -m http.server 8080",
+      "url": "https://aldis.carino.systems/",
+      "tags": [
+        "morse",
+        "optical",
+        "line-of-sight",
+        "no-radio",
+        "signalling"
+      ]
+    },
+    {
       "id": "docker-mailserver",
       "role": "comms",
       "name": "docker-mailserver",
