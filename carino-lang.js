@@ -18,8 +18,10 @@
    The fleet-wide choice is a cookie on .carino.systems, so one
    pick on any subdomain applies to every site in the fleet
    (subdomains do NOT share localStorage — the cookie is the only
-   thing that makes the preference travel). Off-domain (local
-   dev, forks) it falls back to per-site localStorage.
+   thing that makes the preference travel). The same choice is
+   mirrored into per-site localStorage, which is what off-domain
+   copies (local dev, forks) read, and what keeps the pick alive
+   on Safari — ITP caps a JS-set cookie at seven days.
 
    The file owns only the preference. Each app owns its own
    dictionary and reacts via:
@@ -62,6 +64,11 @@
     + 'color:' + TEXT + ';font-size:.8rem;}'
     + '#cnLangBox button:hover{background:rgba(234,179,8,.08);color:' + A + ';}'
     + '#cnLangBox button .code{font-family:' + MONO + ';font-size:.65rem;letter-spacing:.1em;color:' + MUTED + ';}'
+    // "Русский" is the only Cyrillic on an English page, and it is inside a
+    // menu nobody has opened yet — enough to pull a whole Cyrillic webfont
+    // subset down on every first visit in every language. A system face for
+    // that one label costs nothing and every other row keeps the site's font.
+    + '#cnLangBox button .nat[lang="ru"]{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}'
     + '#cnLangBox button.active{color:' + A + ';}'
     + '#cnLangBox button.active .code{color:' + A + ';}';
 
@@ -80,30 +87,51 @@
 
   var onFleet = /(^|\.)carino\.systems$/.test(location.hostname);
 
-  function readStored() {
-    if (onFleet) {
+  /* Storage is a MIRROR, not an either/or. The parent-domain cookie is the
+     only thing that carries the choice across subdomains, but Safari's ITP
+     caps the lifetime of any cookie written from JS at seven days — so on
+     Safari the fleet-wide pick silently reverted to Auto about once a week,
+     while Gecko and Chromium honoured the full Max-Age=31536000. localStorage
+     is not capped that way, so we write both: the cookie for travel, the
+     localStorage copy as a same-origin backstop. Reads prefer the cookie (it
+     is the one another subdomain can have just updated) and fall through to
+     the mirror when it is gone. */
+
+  function readCookie() {
+    try {
       var m = document.cookie.match(/(?:^|;\s*)carino_lang=([^;]+)/);
       return m ? resolve(decodeURIComponent(m[1])) : null;
-    }
+    } catch (e) { return null; }
+  }
+
+  function readStored() {
+    var c = onFleet ? readCookie() : null;
+    if (c) return c;
     try { return resolve(localStorage.getItem('carino_lang')); } catch (e) { return null; }
   }
 
+  // Secure is added only where it means something: a browser rejects a Secure
+  // cookie outright from a plain-http origin, so setting it unconditionally
+  // would throw the preference away on any fleet site still served over http.
+  var COOKIE = '; Domain=.carino.systems; Path=/; SameSite=Lax'
+    + (location.protocol === 'https:' ? '; Secure' : '');
+
   function store(code) {
     if (onFleet) {
-      // The parent-domain cookie is what makes the choice fleet-wide.
-      document.cookie = 'carino_lang=' + encodeURIComponent(code)
-        + '; Domain=.carino.systems; Path=/; Max-Age=31536000; SameSite=Lax';
-    } else {
-      try { localStorage.setItem('carino_lang', code); } catch (e) { /* private mode */ }
+      try {
+        document.cookie = 'carino_lang=' + encodeURIComponent(code) + '; Max-Age=31536000' + COOKIE;
+      } catch (e) { /* cookies blocked */ }
     }
+    try { localStorage.setItem('carino_lang', code); } catch (e) { /* private mode */ }
   }
 
   function clearStore() {
     if (onFleet) {
-      document.cookie = 'carino_lang=; Domain=.carino.systems; Path=/; Max-Age=0; SameSite=Lax';
-    } else {
-      try { localStorage.removeItem('carino_lang'); } catch (e) { /* private mode */ }
+      try {
+        document.cookie = 'carino_lang=; Max-Age=0' + COOKIE;
+      } catch (e) { /* cookies blocked */ }
     }
+    try { localStorage.removeItem('carino_lang'); } catch (e) { /* private mode */ }
   }
 
   // AUTO is the default: no stored choice means "follow the browser". A
@@ -153,9 +181,17 @@
 
   /* ---- UI ---- */
 
+  // The shield link to carino.systems/legal.html (#cnLegal) sits in every
+  // header, shared or bespoke. Its tooltip is translated here, the one script
+  // all of those headers load, rather than in each site's own dictionary.
+  var LEGAL = { en: 'Legal notice & privacy', es: 'Aviso legal y privacidad', 'pt-BR': 'Aviso legal e privacidade',
+                ja: '法的通知とプライバシー', ru: 'Правовая информация и конфиденциальность' };
+
   function updateBtn() {
     var btn = document.getElementById('cnLangBtn');
     if (btn) btn.innerHTML = ICON + '<span class="lbl">' + (manual ? label(current) : 'AUTO') + '</span>';
+    var legal = document.getElementById('cnLegal');
+    if (legal) { legal.title = LEGAL[current] || LEGAL.en; legal.setAttribute('aria-label', legal.title); }
   }
 
   function renderRows() {
@@ -176,7 +212,7 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.className = (manual && l[0] === current) ? 'active' : '';
-      b.innerHTML = '<span>' + l[2] + '</span><span class="code">' + l[1] + '</span>';
+      b.innerHTML = '<span class="nat" lang="' + l[0] + '">' + l[2] + '</span><span class="code">' + l[1] + '</span>';
       b.addEventListener('click', function (e) {
         e.stopPropagation();
         set(l[0]);
@@ -213,7 +249,19 @@
       box.classList.toggle('open');
     });
     box.addEventListener('click', function (e) { e.stopPropagation(); });
-    document.addEventListener('click', function () { box.classList.remove('open'); });
+
+    // Tap-outside-to-dismiss: WebKit does not bubble a click to document from
+    // a non-interactive element, so on iOS the document 'click' below never
+    // fires and the menu stays stuck open. touchend always bubbles, so it is
+    // the iOS path. Both handlers only ever REMOVE the class, so a desktop
+    // browser that emits touchend and then click cannot double-fire into a
+    // reopen. The button and the box stop touchend too, so a tap inside is
+    // handled by the click handlers rather than closing the menu first.
+    function dismiss() { box.classList.remove('open'); }
+    btn.addEventListener('touchend', function (e) { e.stopPropagation(); });
+    box.addEventListener('touchend', function (e) { e.stopPropagation(); });
+    document.addEventListener('touchend', dismiss);
+    document.addEventListener('click', dismiss);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') box.classList.remove('open');
     });

@@ -37,7 +37,11 @@
      1  the app's own controls (.cn-actions)
      2  status     (carino-diag.js, or an app's own toggle)
      3  language   (carino-lang.js)
-     4  GitHub + LinkedIn — always last
+     4  legal + GitHub + LinkedIn — always last
+
+   The shield in that last group opens carino.systems/legal.html, the one
+   legal notice, privacy and cookie page for every site. carino-lang.js
+   translates its tooltip (it finds the link by its id, #cnLegal).
    ============================================================ */
 (function () {
   'use strict';
@@ -93,6 +97,9 @@
 
   var GH = 'M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22';
   var LI = 'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z';
+  var SHIELD = 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z';
+  var LEGAL_URL = 'https://carino.systems/legal.html';
+  var LEGAL = 'Legal notice & privacy';
 
   var MARKUP = ''
     + '<header class="top-header" id="carinoNav">'
@@ -108,6 +115,7 @@
     + '</div></div>'
     + '<div class="cn-right">'
     + '<div class="social-row">'
+    + '<a href="' + LEGAL_URL + '" class="icon-btn" id="cnLegal" title="' + LEGAL + '" aria-label="' + LEGAL + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="' + SHIELD + '"></path></svg></a>'
     + '<a href="' + GH_URL + '" target="_blank" rel="noopener" class="icon-btn" title="' + (REPO ? REPO + ' on GitHub' : 'GitHub') + '" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="' + GH + '"></path></svg></a>'
     + '<a href="https://www.linkedin.com/in/miguelcarino94/" target="_blank" rel="noopener" class="icon-btn" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="' + LI + '"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>'
     + '</div>'
