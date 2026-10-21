@@ -3,6 +3,8 @@
 Planning an intranet you can still use when the internet is taken away →
 **[offline.carino.systems](https://offline.carino.systems)**
 
+![Carino Offline](screenshot.webp)
+
 One page for the question *"what happens to everything I run if DNS, my domain, or transit
 gets blocked?"* — and, more usefully, *what do I download, buy and build before that day.*
 It opens on **00 · Start**, which states the argument in three cards and routes you into the
