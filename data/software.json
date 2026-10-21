@@ -1907,8 +1907,8 @@
         "macos"
       ],
       "ram": "1 GB",
-      "install": "git clone https://github.com/MiguelCarino/Carino-PACS && docker compose up -d",
-      "url": "https://github.com/MiguelCarino/Carino-PACS",
+      "install": "git clone https://github.com/MiguelCarino/Carino-DICOM && cd Carino-DICOM && docker compose up -d",
+      "url": "https://github.com/MiguelCarino/Carino-DICOM",
       "tags": [
         "dicom",
         "gateway",
