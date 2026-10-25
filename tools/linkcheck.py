@@ -29,7 +29,8 @@ UA = ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
 TIMEOUT = 25
 
 # Failing the run on these would mean failing on someone else's WAF policy.
-BLOCKED_CODES = {401, 403, 405, 406, 429, 503}
+# 402/418/421 and Cloudflare's 52x are what bot walls answer with too.
+BLOCKED_CODES = {401, 402, 403, 405, 406, 418, 421, 429, 503, 520, 521, 522, 523, 524, 525, 526}
 DEAD_CODES = {404, 410}
 
 # A bot wall that answers 200 and redirects to its own interstitial looks like a
@@ -42,6 +43,13 @@ WALL_HOSTS = ('validate.perfdrive.com', 'geo.captcha-delivery.com', 'challenges.
 # A server that answers TLS with the wrong SNI name breaks urllib but usually
 # serves browsers fine. Report it as its own category rather than as dead.
 TLS_HINTS = ('UNRECOGNIZED_NAME', 'CERTIFICATE_VERIFY_FAILED', 'SSLV3', 'WRONG_VERSION_NUMBER')
+
+# No answer at all, even on the patient second pass: a timeout, a reset, or a
+# network this machine cannot reach (an IPv6-only host from an IPv4 box). That
+# says nothing about the link, so it is listed for a look, never a failure.
+# DNS failure and a refused connection are not here: those do mean dead.
+UNREACHABLE_HINTS = ('TIMED OUT', 'TIMEOUT', 'NETWORK IS UNREACHABLE', 'CONNECTION RESET',
+                     'REMOTEDISCONNECTED', 'NO ROUTE TO HOST', 'TEMPORARILY UNAVAILABLE')
 
 
 FILES = ('grablist', 'software', 'hardware', 'sneakernet', 'playbook', 'start')
@@ -122,7 +130,7 @@ def main():
         for i in retry:
             results[i] = fetch(items[i])
 
-    ok, blocked, dead, moved, tls = [], [], [], [], []
+    ok, blocked, dead, moved, tls, unreachable = [], [], [], [], [], []
     for r in results:
         iso, where, url, status, redirect, err = r
         wall = redirect and any(w in redirect for w in WALL_HOSTS)
@@ -137,6 +145,8 @@ def main():
             blocked.append(r)
         elif not status and any(h in err.upper() for h in TLS_HINTS):
             tls.append(r)
+        elif not status and any(h in err.upper() for h in UNREACHABLE_HINTS):
+            unreachable.append(r)
         else:
             dead.append(r)
 
@@ -151,12 +161,14 @@ def main():
                 print('  %-22s      → %s' % ('', d))
         print('')
 
-    print('%d ok   %d redirected   %d blocked   %d tls   %d dead\n'
-          % (len(ok), len(moved), len(blocked), len(tls), len(dead)))
+    print('%d ok   %d redirected   %d blocked   %d tls   %d unreachable   %d dead\n'
+          % (len(ok), len(moved), len(blocked), len(tls), len(unreachable), len(dead)))
     show('REDIRECTED — point the data at the destination', moved, lambda rd, er: rd)
     show('BLOCKED — WAF or bot wall, verify by hand, not a failure', blocked,
          lambda rd, er: rd or er)
     show('TLS — handshake refused by urllib, usually fine in a browser, check by hand', tls,
+         lambda rd, er: er)
+    show('UNREACHABLE — no answer from here, check by hand, not a failure', unreachable,
          lambda rd, er: er)
     show('DEAD — fix or remove these', dead, lambda rd, er: er or 'no response')
 
