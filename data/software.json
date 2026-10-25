@@ -590,6 +590,7 @@
       ],
       "disk": "~600 GB for current + n-1, one architecture",
       "install": "dnf reposync --repoid=fedora --download-metadata -p /srv/mirror",
+      "url": "https://dnf-plugins-core.readthedocs.io/en/latest/reposync.html",
       "escape": "Re-run monthly. Keep the previous tree until the new one has been installed from successfully at least once.",
       "tags": [
         "fedora",

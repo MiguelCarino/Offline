@@ -21,12 +21,15 @@ The full written plan this site is built from lives in
 
 ## The six sections
 
-The layout is a **single-screen tabbed app**: the page itself never scrolls. The six section
-tabs live in the **shared Carino navbar** — `carino-navbar.js` relocates the
-`[data-carino-actions]` tab strip into its right-hand cluster — and one content panel fills
-the viewport below the section description and search bar. Each tab is backed by one editable
-JSON file in [`data/`](data/); the search bar filters the active panel, except on **Start**,
-where it searches all five of the others at once.
+The page scrolls normally. The six section tabs live in the **shared Carino navbar** —
+`carino-navbar.js` relocates the `[data-carino-actions]` tab strip into its right-hand
+cluster. Start opens with the gold-C hero; every other panel opens with its description and a
+sticky bar of **facet chips** (one choice per facet, Clear, and the "N shown" count). Text
+search comes after the chips, as a **Find** chip or the `/` key, and searches all five
+sections. Every row and dialog ends in a source line ("Source: domain ↗ · checked YYYY-MM";
+entries without an outside link cite OFFLINE.md). Each tab is backed by one editable JSON file
+in [`data/`](data/), checked by `python3 tools/validate.py` (schema and cross-references)
+and `python3 tools/linkcheck.py` (every `url`; BLOCKED is not a failure).
 
 | Tab | Data | Contents |
 | --- | --- | --- |
@@ -133,7 +136,7 @@ instead of becoming an essay, and nothing needs a second screen to be comparable
 The two longest sections — Sneakernet and Playbook — have **sub-navigation** so exactly one
 block is on screen at a time, rather than five stacked ones. Rarely-pressed controls (select,
 export) sit behind small popup menus, and the grab-list totals are a single strip rather than
-a bank of tiles. The page itself still never scrolls; only the active panel does.
+a bank of tiles.
 
 `index.html` holds all CSS; `app.js` holds all rendering, filtering and export; the six data
 files are fetched at runtime (so serve it over http — `python3 -m http.server` locally, or

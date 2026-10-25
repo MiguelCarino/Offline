@@ -267,6 +267,43 @@
 
   function emptyBlock(msg) { return `<div class="empty">${escapeHtml(msg)}</div>`; }
 
+  /* Which data file each detail kind comes from, for the date on its source line. */
+  const KIND_FILE = { grab: 'grab', stack: 'stack', iron: 'iron', media: 'sneak', recipe: 'sneak',
+    artifact: 'sneak', use: 'sneak', threat: 'plan', phase: 'plan', brk: 'plan', drill: 'plan', layer: 'plan' };
+  /* Entries with no outside link are this site's own write-up; their source is
+     the planning document the data files were written from. */
+  const EDITORIAL_URL = 'https://github.com/MiguelCarino/Offline/blob/main/OFFLINE.md';
+
+  function domainOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return str(url); }
+  }
+
+  /* "Source: domain ↗ · checked YYYY-MM" (carino-ui.css .src-line). */
+  function srcLine(kind, r) {
+    const file = obj(DATA[KIND_FILE[kind] || 'start']);
+    const when = str(r && r.updated) || str(file.updated);
+    const url = str(r && r.url);
+    const a = url
+      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(domainOf(url))} ↗</a>`
+      : `<a class="src-ed" href="${EDITORIAL_URL}" target="_blank" rel="noopener">${escapeHtml(TT('Carino Offline notes'))} ↗</a>`;
+    return `<span class="src-line"><span>${escapeHtml(TT('Source:'))}</span>${a}${
+      when ? `<span class="src-date">${escapeHtml(url ? TT('checked') : TT('reviewed'))} ${escapeHtml(when)}</span>` : ''}</span>`;
+  }
+
+  /* Every row that opens a record gets that record's source line, so the
+     renderers do not each have to remember it. */
+  function decorateSources(root) {
+    if (!root) return;
+    $$('[data-act="detail"][data-kind]', root).forEach(row => {
+      const main = row.querySelector('.row-main, .tile-main');
+      if (!main || main.querySelector('.src-line')) return;
+      const kind = row.getAttribute('data-kind');
+      if (!KIND_FILE[kind]) return;
+      const rec = findRec(kind, row.getAttribute('data-rec'));
+      if (rec) main.insertAdjacentHTML('beforeend', srcLine(kind, rec));
+    });
+  }
+
   function stamp(updated) {
     if (!updated) return '';
     return `<span class="t-dim">${escapeHtml(TT('data reviewed'))} ${escapeHtml(updated)}</span>`;
@@ -625,13 +662,10 @@
   }
 
   function grabMatches(it) {
-    const chip = state.chip.grab;
-    if (chip) {
-      const k = chip.split(':')[0], v = chip.split(':')[1];
-      if (k === 'tier' && str(it.tier) !== v) return false;
-      if (k === 'cat' && str(it.cat) !== v) return false;
-      if (k === 'store' && str(it.store) !== v) return false;
-    }
+    const tier = chipVal('grab', 'tier'), cat = chipVal('grab', 'cat'), store = chipVal('grab', 'store');
+    if (tier && str(it.tier) !== tier) return false;
+    if (cat && str(it.cat) !== cat) return false;
+    if (store && str(it.store) !== store) return false;
     if (!state.q) return true;
     return haystack(it.name, it.what, it.why, it.size, it.store, it.note, it.get, it.verify,
       it.tier, it.cat, it.tags).indexOf(state.q) !== -1;
@@ -731,7 +765,7 @@
           </div>
         </div>
         <div class="menu-wrap">
-          <button class="btn primary" type="button" data-act="menu" data-menu="export"
+          <button class="btn btn-primary" type="button" data-act="menu" data-menu="export"
                   aria-haspopup="true" aria-expanded="false" aria-controls="menu-export">${TT('Export')} ▾</button>
           <div class="menu" id="menu-export" role="menu" hidden>
             <button class="menu-i" type="button" role="menuitem" data-act="export-md">${TT('Copy as Markdown')}</button>
@@ -987,12 +1021,9 @@
      ═════════════════════════════════════════════════════════════ */
 
   function stackMatches(it) {
-    const chip = state.chip.stack;
-    if (chip) {
-      const k = chip.split(':')[0], v = chip.split(':')[1];
-      if (k === 'role' && str(it.role) !== v) return false;
-      if (k === 'offline' && str(it.offline) !== v) return false;
-    }
+    const role = chipVal('stack', 'role'), rating = chipVal('stack', 'offline');
+    if (role && str(it.role) !== role) return false;
+    if (rating && str(it.offline) !== rating) return false;
     if (!state.q) return true;
     return haystack(it.name, it.does, it.why, it.escape, it.license, it.lang, it.platform,
       it.ram, it.disk, it.install, it.role, it.alts, it.tags).indexOf(state.q) !== -1;
@@ -1069,12 +1100,9 @@
 
   function ironMatches(it) {
     if (!inTier(it, state.ironTier)) return false;
-    const chip = state.chip.iron;
-    if (chip) {
-      const k = chip.split(':')[0], v = chip.split(':')[1];
-      if (k === 'group' && str(it.group) !== v) return false;
-      if (k === 'cloud' && it.cloudFree !== false) return false;
-    }
+    const group = chipVal('iron', 'group');
+    if (group && str(it.group) !== group) return false;
+    if (chipVal('iron', 'cloud') && it.cloudFree !== false) return false;
     if (!state.q) return true;
     return haystack(it.name, it.spec, it.why, it.escape, it.spare, it.mx, it.group,
       it.alts, it.tags, obj(it.tierSpec)[state.ironTier]).indexOf(state.q) !== -1;
@@ -1324,8 +1352,8 @@
     if (dataMissing('plan')) return;
     const d = obj(DATA.plan);
     const chip = state.chip.plan;
-    const likeChip = chip.indexOf('like:') === 0 ? chip.split(':')[1] : '';
-    const sevChip  = chip.indexOf('sev:') === 0 ? chip.split(':')[1] : '';
+    const likeChip = chipVal('plan', 'like');
+    const sevChip  = chipVal('plan', 'sev');
 
     /* Five stacked blocks was the worst scroll on the site. One at a time. */
     const threats  = arr(d.threats).filter(t => !sevChip && (!likeChip || str(t.likelihood) === likeChip) && planMatch(t));
@@ -1482,30 +1510,91 @@
       /* no chips: the channel segmented control in the panel already does this,
          and two selectors for one choice is just confusing */
     } else if (panel === 'plan') {
-      ['high', 'medium', 'low'].forEach(k => out.push({ key: 'like:' + k, label: TT('likelihood') + ': ' + TT(k) }));
-      ['hard', 'soft', 'avoidable'].forEach(k => out.push({ key: 'sev:' + k, label: TT('breaks') + ': ' + TT(k) }));
+      ['high', 'medium', 'low'].forEach(k => out.push({ key: 'like:' + k, label: TT(k) }));
+      ['hard', 'soft', 'avoidable'].forEach(k => out.push({ key: 'sev:' + k, label: TT(k) }));
     }
     return out;
   }
 
+  /* A facet's label in the bar, by the prefix of its chip keys. */
+  const FACET_LABEL = { tier: 'Tier', cat: 'Category', store: 'Store', offline: 'Works offline', role: 'Role',
+                        cloud: 'Cloud', group: 'Group', like: 'Likelihood', sev: 'Breaks' };
+
+  /* state.chip[panel] holds one "facet:value" per facet, joined by "|":
+     one choice per facet, and clicking the chosen chip again clears it. */
+  function chipMap(panel) {
+    const m = {};
+    str(state.chip[panel]).split('|').filter(Boolean).forEach(kv => {
+      const i = kv.indexOf(':');
+      m[kv.slice(0, i)] = kv.slice(i + 1);
+    });
+    return m;
+  }
+  function chipVal(panel, facet) { return chipMap(panel)[facet] || ''; }
+
+  /* carino-ui.css .fchips: each facet's label and chips, a rule between
+     facets, and Clear once any chip is on. Find and the count sit after. */
   function renderChips() {
     const host = $('chips');
     if (!host) return;
     const panel = state.panel;
     const defs = chipDefs(panel);
-    if (!defs.length) { setHTML(host, ''); return; }
+    const on = chipMap(panel);
+    let html = '', last = '';
+    defs.forEach(c => {
+      const k = c.key.split(':')[0];
+      if (k !== last) {
+        html += (last ? '<span class="fchip-sep"></span>' : '') +
+          `<span class="fchip-lbl">${escapeHtml(TT(FACET_LABEL[k] || k))}</span>`;
+        last = k;
+      }
+      const act = on[k] === c.key.slice(k.length + 1);
+      html += `<button class="fchip${act ? ' active' : ''}" type="button" aria-pressed="${act}"
+        data-act="chip" data-key="${escapeHtml(c.key)}">${escapeHtml(c.label)}</button>`;
+    });
+    if (state.chip[panel] || state.q) {
+      html += `<span class="fchip-sep"></span><button class="fchip clear" type="button" data-act="chip" data-key="">${TT('Clear')}</button>`;
+    }
+    setHTML(host, html);
+    renderFind();
+  }
 
-    const active = state.chip[panel];
+  /* Find comes after the chips, never first: a chip that opens into the
+     field (or the "/" key). It stays open while it holds a query. */
+  let findOpen = false;
+  function renderFind() {
+    const q = $('q'), chip = $('findChip');
+    const open = findOpen || !!state.q;
+    if (q) q.hidden = !open;
+    if (chip) chip.hidden = open;
+  }
+  function openFind() {
+    findOpen = true;
+    renderFind();
+    const q = $('q');
+    if (q) q.focus();
+  }
 
-    setHTML(host, `<span class="chip-lbl">${TT('Filter')}</span>` +
-      defs.map(c => `<button class="chip${c.key === active ? ' active' : ''}" type="button"
-        data-act="chip" data-key="${escapeHtml(c.key)}">${escapeHtml(c.label)}</button>`).join('') +
-      (state.chip[panel] ? `<button class="chip active" type="button" data-act="chip" data-key="">${TT('clear')} ✕</button>` : ''));
+  /* "N shown": the entries the active panel drew, read off the DOM after the
+     render so it can never disagree with what is on screen. */
+  function renderCount() {
+    const el = $('shownCount'), sec = SEC_BY_KEY[state.panel];
+    const panel = sec && $(sec.panel);
+    if (!el || !panel) return;
+    const n = panel.querySelectorAll('[data-act="detail"]').length;
+    el.textContent = n + ' ' + TT('shown');
   }
 
   function setChip(key) {
     const panel = state.panel;
-    state.chip[panel] = (state.chip[panel] === key) ? '' : key;
+    if (!key) {
+      state.chip[panel] = '';
+      if (state.q) { state.q = ''; const q = $('q'); if (q) q.value = ''; findOpen = false; }
+    } else {
+      const m = chipMap(panel), k = key.split(':')[0], v = key.slice(k.length + 1);
+      if (m[k] === v) delete m[k]; else m[k] = v;
+      state.chip[panel] = Object.keys(m).map(f => f + ':' + m[f]).join('|');
+    }
     renderChips();
     renderActive();
   }
@@ -1574,13 +1663,8 @@
       setTimeout(() => { suppressHash = false; }, 0);
     }
 
-    const panelEl = $(sec.panel);
-    if (panelEl) panelEl.scrollTop = 0;
-    /* Start scrolls the wrap rather than the panel (see body.is-start in
-       index.html), so the wrap needs the same reset or you come back to a
-       landing page already scrolled past its own hero. */
-    const wrapEl = document.querySelector('.wrap');
-    if (wrapEl) wrapEl.scrollTop = 0;
+    /* the panels share the page's scroll now: land at the top of the new one */
+    if (window.scrollY > 0) window.scrollTo(0, 0);
 
     renderChips();
     renderActive();
@@ -1589,11 +1673,30 @@
   const RENDERERS = { start: renderStart, grab: renderGrab, stack: renderStack, iron: renderIron,
                       sneak: renderSneak, plan: renderPlan };
 
-  function renderActive() { safe(state.panel, RENDERERS[state.panel] || function () {}); }
+  function renderActive() {
+    safe(state.panel, RENDERERS[state.panel] || function () {});
+    const sec = SEC_BY_KEY[state.panel];
+    decorateSources(sec && $(sec.panel));
+    renderCount();
+  }
 
   function renderAll() {
     renderChips();
-    SECTIONS.forEach(s => safe(s.file, RENDERERS[s.key]));
+    SECTIONS.forEach(s => { safe(s.file, RENDERERS[s.key]); decorateSources($(s.panel)); });
+    renderCount();
+    renderMeta();
+  }
+
+  /* Hero counts and the footer line read the data files, so they follow the language. */
+  function renderMeta() {
+    const months = SECTIONS.map(s => str(obj(DATA[s.key]).updated)).filter(Boolean).sort();
+    const when = months[months.length - 1] || '';
+    const n = ['grab', 'stack', 'iron'].reduce((t, k) => t + arr(DATA[k] && DATA[k].items).length, 0);
+    const hs = $('heroStats');
+    if (hs) hs.textContent = `${n} ${TT('entries')} · ${SECTIONS.length - 1} ${TT('sections')}` +
+      (when ? ` · ${TT('reviewed')} ${when}` : '');
+    const fl = $('footLine');
+    if (fl) fl.textContent = TT('Runs entirely in your browser. Every entry links to its source; checked {date}.').replace('{date}', when);
   }
 
   /* Hub convention: #<panel-hash> selects a panel; any other #tag, or a ?q=,
@@ -1630,6 +1733,7 @@
   function onSearch() {
     const q = $('q');
     state.q = q ? q.value.trim().toLowerCase() : '';
+    renderChips();
     renderActive();
   }
 
@@ -1663,7 +1767,18 @@
     if (q) {
       q.addEventListener('input', onSearch);
       q.addEventListener('search', onSearch);   // the type=search clear button
+      // an empty field folds back into its chip when it loses focus
+      q.addEventListener('blur', () => { if (!q.value.trim()) { findOpen = false; renderFind(); } });
     }
+    const findChip = $('findChip');
+    if (findChip) findChip.addEventListener('click', openFind);
+    /* "/" opens Find from anywhere that is not already a text field. */
+    document.addEventListener('keydown', e => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || state.panel === 'start') return;
+      if (e.target.matches && e.target.matches('input,textarea,select')) return;
+      e.preventDefault();
+      openFind();
+    });
 
     /* Tabs are delegated: carino-navbar.js relocates the whole
        <nav class="tabs"> node into the shared navbar after this runs. */
@@ -1904,14 +2019,14 @@
   }
 
   function detailBody(kind, r) {
-    const foot = () => `<div class="d-foot">${r.url ? link(r.url, TT('source')) : ''}${tagBits(r.tags)}</div>`;
+    const foot = () => `<div class="d-foot">${KIND_FILE[kind] ? srcLine(kind, r) : (r.url ? link(r.url, TT('source')) : '')}${tagBits(r.tags)}</div>`;
 
     if (kind === 'premise') return dPara('', r.body);
 
     if (kind === 'step') {
       const sec = SEC_BY_KEY[str(r.goes)];
       return dPara('', r.what) + dPara('Why', r.why)
-        + (sec ? `<div class="d-foot"><button class="btn primary" type="button" data-act="go" data-panel="${escapeHtml(sec.key)}">${escapeHtml(TT(sec.title))} →</button></div>` : '');
+        + (sec ? `<div class="d-foot"><button class="btn btn-primary" type="button" data-act="go" data-panel="${escapeHtml(sec.key)}">${escapeHtml(TT(sec.title))} →</button></div>` : '');
     }
 
     if (kind === 'route') {
@@ -2049,8 +2164,7 @@
     lastFocus = document.activeElement;
     ttl.textContent = str(DETAIL[kind].title(rec));
     body.innerHTML = detailBody(kind, rec) || `<p class="d-p t-dim">${TT('Nothing further recorded.')}</p>`;
-    box.classList.add('open');
-    box.setAttribute('aria-hidden', 'false');
+    box.hidden = false;
     /* aria-modal only describes intent; inert is what actually keeps Tab inside.
        Every body child is inerted because carino-navbar.js moves the tabs and
        header controls out of .wrap, so inerting .wrap alone would miss them. */
@@ -2073,9 +2187,8 @@
 
   function closeDetail() {
     const box = $('modal');
-    if (!box || !box.classList.contains('open')) return;
-    box.classList.remove('open');
-    box.setAttribute('aria-hidden', 'true');
+    if (!box || box.hidden) return;
+    box.hidden = true;
     setBackgroundInert(box, false);
     if (lastFocus && lastFocus.focus) lastFocus.focus();
     lastFocus = null;
