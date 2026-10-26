@@ -63,6 +63,8 @@
     /* ── FILTER BAR — carino-ui.css .fchips: chips first, then Find ── */
     .fchips{margin:10px -20px 12px;padding:10px 20px;min-height:46px;}
     @media(max-width:640px){.fchips{margin:8px -12px 10px;padding:9px 12px;}}
+    /* CJK facet labels (段階, カテゴリー) would otherwise break one glyph per line in the nowrap strip */
+    .fchip-lbl{white-space:nowrap;flex:none;}
     #chips{display:contents;}
     .find-chip .kbd{margin-left:4px;padding:0 5px;font-size:var(--fs-micro);}
     #q{width:240px;flex:none;padding:5px 10px;font-size:var(--fs-label);}
@@ -135,7 +137,9 @@
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .row-cat{font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);white-space:nowrap;}
     .row-num{font-family:var(--mono);font-size:0.72rem;color:var(--text);white-space:nowrap;
-      text-align:right;min-width:52px;}
+      text-align:right;min-width:52px;
+      /* a long figure (Sneakernet NFC capacity, a Uses tag) ellipsises; the dialog has it whole */
+      max-width:min(24ch,30vw);overflow:hidden;text-overflow:ellipsis;}
     .row-flag{color:var(--err);font-size:0.78rem;}
     .row.done .row-name{color:var(--text-muted);text-decoration:line-through;}
     .row.done .row-sub{color:var(--text-muted);}
@@ -171,9 +175,9 @@
     .lede{margin-bottom:11px;}
     .lede p{margin:0 0 8px;font-size:0.82rem;color:var(--text-sec);line-height:1.55;max-width:820px;}
 
-    /* ══ DETAIL DIALOG — carino-ui.css .modal-scrim / .modal ══ */
-    .modal-scrim{z-index:2147483100;align-items:flex-start;overflow-y:auto;}
-    #modal .modal{max-width:620px;margin:auto;max-height:calc(100dvh - 48px);}
+    /* ══ DETAIL DIALOG — a native <dialog> wearing carino-ui.css .modal;
+       carino-ui.js CarinoUI.modal runs Esc, ✕, backdrop and focus ══ */
+    dialog#modal{max-width:min(620px,calc(100vw - 48px));max-height:calc(100dvh - 48px);margin:auto;}
     #modal .modal-head{align-items:flex-start;background:var(--accent-faint);}
     #modal .modal-title{text-transform:none;font-family:var(--sans);font-weight:800;letter-spacing:0;line-height:1.3;margin:0;}
     #modal .modal-body{padding:15px 17px 17px;}
@@ -183,14 +187,15 @@
       letter-spacing:0.12em;color:var(--text-muted);margin:14px 0 6px;display:flex;gap:8px;align-items:baseline;}
     /* a count on the right of a label, the way .group-h carries one */
     .d-lbl .count{margin-left:auto;font-weight:400;letter-spacing:0.06em;color:var(--text-muted);}
-    .d-facts{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:12px 0 4px;
+    /* keys wrap past ~45% so a long task name (Playbook > Rhythm) cannot push the page sideways at 390px */
+    .d-facts{display:grid;grid-template-columns:fit-content(45%) minmax(0,1fr);gap:5px 14px;margin:12px 0 4px;
       font-family:var(--mono);font-size:0.73rem;line-height:1.5;}
     .d-facts.tight{margin:0;}
-    .d-k{color:var(--text-muted);white-space:nowrap;}
-    .d-v{color:var(--text);}
+    .d-k{color:var(--text-muted);overflow-wrap:anywhere;}
+    .d-v{color:var(--text);overflow-wrap:anywhere;}
     .d-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:13px;
       padding-top:11px;border-top:1px solid var(--border);}
-    @media(max-width:640px){.modal-scrim{padding:12px;}#modal .modal{max-height:calc(100dvh - 24px);}}
+    @media(max-width:640px){dialog#modal{max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);}}
 
     /* ── LOAD FAILURE — carino-ui.css .alert.err, naming the file ── */
     #loadErr{margin-top:10px;}
@@ -348,6 +353,12 @@
       font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);}
     .code:hover::after,code.copy:hover::after{color:var(--accent);}
     .code.copied::after,code.copy.copied::after{content:'copied';color:var(--ok);}
+    /* app.js stamps the translated label on each block (data-cl / data-cld) */
+    .code[data-cl]::after{content:attr(data-cl);}
+    .code.copied[data-cld]::after{content:attr(data-cld);}
+    /* the longer ja/ru labels need a wider right gutter so they never sit on the command */
+    html:lang(ja) .code{padding-right:72px;}
+    html:lang(ru) .code{padding-right:92px;}
     .code .cm{color:var(--text-muted);}   /* shell comment lines inside a recipe */
     .copybtn{font-family:var(--mono);font-size:var(--fs-micro);font-weight:700;letter-spacing:0.1em;
       text-transform:uppercase;color:var(--text-muted);background:transparent;border:1px solid var(--border);
@@ -586,7 +597,6 @@
 
   </div>
 
-  <!-- Detail dialog. Rows stay one line; everything else opens in here. -->
   <footer class="site-foot">
     <div class="sf-links">
       <a href="https://github.com/MiguelCarino/Offline" target="_blank" rel="noopener" data-i18n>Source</a>
@@ -596,17 +606,17 @@
     <div class="sf-line" id="footLine">Runs entirely in your browser. Every entry links to its source.</div>
   </footer>
 
-  <!-- Detail dialog (carino-ui.css .modal). Rows stay short; everything else opens in here. -->
-  <div id="modal" class="modal-scrim" hidden>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <div class="modal-head">
-        <h3 class="modal-title" id="modalTitle"></h3>
-        <button id="modalClose" class="modal-x" type="button" data-act="modal-close" aria-label="Close">✕</button>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
+  <!-- Detail dialog (carino-ui.css .modal). Rows stay short; everything else
+       opens in here, and #<kind>/<id> links straight to it. -->
+  <dialog id="modal" class="modal" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h3 class="modal-title" id="modalTitle"></h3>
+      <button id="modalClose" class="modal-x" type="button" data-close aria-label="Close">✕</button>
     </div>
-  </div>
+    <div class="modal-body" id="modalBody"></div>
+  </dialog>
 
+  <script src="carino-ui.js" defer></script>
   <script src="app.js" defer></script>
   <script src="carino-navbar.js" data-app="Offline" data-repo="Offline" defer></script>
   <script src="carino-lang.js" defer></script>

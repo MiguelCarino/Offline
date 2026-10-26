@@ -130,7 +130,11 @@ page renders as a visible stamp. Bump it whenever you refresh figures.
 **One line per thing, detail on click.** Every list is a row carrying a name, a one-clause
 gist and the two numbers you scan by — size and time, price and quantity, capacity and cost
 per TB. Prose, shell commands, alternatives and caveats live in a **detail dialog** that opens
-on click (or Enter, or Space; Escape and the backdrop close it). A 66-item list stays a list
+on click (or Enter, or Space; Escape, ✕ and the backdrop close it). While it is open the
+address is `#<kind>/<id>` (for example `#stack/caddy`, `#grab/ventoy`, `#threat/dns-block`),
+so the record can be linked: loading that address opens its panel — and the sub-view that
+holds the row (Sneakernet channel and sub-tab, Playbook sub-tab, an Iron tier that carries
+it) — with the dialog on top, and closing it puts the panel's own hash back. A 66-item list stays a list
 instead of becoming an essay, and nothing needs a second screen to be comparable.
 
 The two longest sections — Sneakernet and Playbook — have **sub-navigation** so exactly one

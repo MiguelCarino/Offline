@@ -111,12 +111,21 @@
     return (n < 10 ? n.toFixed(1) : Math.round(n)) + ' GB';
   }
 
+  /* Units go through TT so ja/ru rows read '8 分' / '1 時間 5 分', not '8 min'. */
   function fmtMins(m) {
     const n = Math.max(0, Math.round(num(m, 0)));
-    if (n === 0) return '0 min';
-    if (n < 60) return n + ' min';
+    const MIN = TT('min'), H = TT('h'), M = TT('m');
+    if (n < 60) return n + ' ' + MIN;
     const h = Math.floor(n / 60), r = n % 60;
-    return r ? h + ' h ' + r + ' m' : h + ' h';
+    return r ? h + ' ' + H + ' ' + r + ' ' + M : h + ' ' + H;
+  }
+
+  /* A data file's navigation label (tier, category, role, group, channel):
+     the data stays English, the control is translated with the English text
+     as the key — same as the sub-tabs. */
+  function labelOf(o) {
+    o = obj(o);
+    return (o.icon ? o.icon + ' ' : '') + TT(str(o.label));
   }
 
   function fmtUSD(n) { return '$' + Math.round(num(n, 0)).toLocaleString('en-US'); }
@@ -244,7 +253,7 @@
     if (!cmd) return '';
     const body = escapeHtml(str(cmd)).split('\n')
       .map(l => /^\s*#/.test(l) ? `<span class="cm">${l}</span>` : l).join('\n');
-    return `<div class="code" role="button" tabindex="0" data-act="copy" data-copy="${escapeHtml(cmd)}" title="${escapeHtml(TT('Click to copy'))}">${body}</div>`;
+    return `<div class="code" role="button" tabindex="0" data-act="copy" data-copy="${escapeHtml(cmd)}" data-cl="${escapeHtml(TT('copy'))}" data-cld="${escapeHtml(TT('copied'))}" title="${escapeHtml(TT('Click to copy'))}">${body}</div>`;
   }
 
   function altsRow(alts, label) {
@@ -702,8 +711,8 @@
       html += `<section class="tier${wont ? ' wont' : ''}${collapsed ? ' collapsed' : ''}" data-tier="${escapeHtml(tid)}">
         <button class="tier-h" type="button" data-act="tier-toggle" data-tier="${escapeHtml(tid)}"
                 aria-expanded="${collapsed ? 'false' : 'true'}">
-          <span class="tier-name ${wont ? '' : textClass(tier.accent)}">${escapeHtml(tier.label)}</span>
-          <span class="tier-lead">${escapeHtml(tier.budget)}${tier.blurb ? ' — ' + escapeHtml(tier.blurb) : ''}</span>
+          <span class="tier-name ${wont ? '' : textClass(tier.accent)}">${escapeHtml(TT(str(tier.label)))}</span>
+          <span class="tier-lead">${escapeHtml(TT(str(tier.budget)))}${tier.blurb ? ' — ' + escapeHtml(tier.blurb) : ''}</span>
           <span class="tier-meta">${escapeHtml(meta)}</span>
         </button>
         <div class="tier-body">${mine.map(it => grabItemHTML(it, wont)).join('')}</div>
@@ -734,8 +743,8 @@
         <span class="row-name">${escapeHtml(it.name)}</span>
         <span class="row-sub">${escapeHtml(str(it.what) || str(it.why))}</span>
       </span>
-      ${cat ? `<span class="row-cat">${escapeHtml((cat.icon ? cat.icon + ' ' : '') + str(cat.label))}</span>` : ''}
-      <span class="row-num">${wont ? '—' : escapeHtml(str(it.size) || fmtSize(it.gb))}</span>
+      ${cat ? `<span class="row-cat">${escapeHtml(labelOf(cat))}</span>` : ''}
+      <span class="row-num">${wont ? '—' : escapeHtml(TT(str(it.size)) || fmtSize(it.gb))}</span>
       <span class="row-num t-dim">${wont ? '' : escapeHtml(fmtMins(it.minutes))}</span>
     </article>`;
   }
@@ -867,7 +876,7 @@
       const mine = grabOrdered().filter(it => str(it.tier) === tid);
       if (!mine.length) return;
       const wont = tid === 'wont';
-      lines.push('## ' + str(tier.label) + (tier.budget && tier.budget !== '-' ? ' — ' + tier.budget : ''));
+      lines.push('## ' + TT(str(tier.label)) + (tier.budget && tier.budget !== '-' ? ' — ' + TT(str(tier.budget)) : ''));
       if (tier.blurb) { lines.push(''); lines.push('_' + str(tier.blurb) + '_'); }
       lines.push('');
       mine.forEach(it => {
@@ -1058,7 +1067,7 @@
       const mine = items.filter(it => str(it.role) === str(role.id));
       if (!mine.length) return;
       html += `<section class="group" data-role="${escapeHtml(role.id)}">
-        ${groupHead((role.icon ? role.icon + ' ' : '') + str(role.label), role.blurb, mine.length)}
+        ${groupHead(labelOf(role), role.blurb, mine.length)}
         <div class="tiles">${mine.map(stackCardHTML).join('')}</div>
       </section>`;
     });
@@ -1119,7 +1128,7 @@
       const btns = ironTiers().map(t => {
         const on = str(t.id) === str(state.ironTier);
         return `<button class="seg-btn${on ? ' active' : ''}" type="button" data-act="iron-tier" data-tier="${escapeHtml(t.id)}">
-          ${escapeHtml(t.label)}${t.recommended ? `<span class="rec">${TT('recommended')}</span>` : ''}
+          ${escapeHtml(TT(str(t.label)))}${t.recommended ? `<span class="rec">${TT('recommended')}</span>` : ''}
           <span class="sub">${escapeHtml(fmtUSD(t.usd))}</span>
         </button>`;
       }).join('');
@@ -1169,9 +1178,9 @@
              do not fit (7 use-case profiles against 59 priced line items). */
           const see = obj(g.see);
           html += `<section class="group" data-group="${escapeHtml(g.id)}">
-            ${groupHead((g.icon ? g.icon + ' ' : '') + str(g.label), '', fmtUSD(gSum))}
+            ${groupHead(labelOf(g), '', fmtUSD(gSum))}
             ${see.url ? `<p class="group-see"><a href="${escapeHtml(str(see.url))}"
-                 target="_blank" rel="noopener">${escapeHtml(str(see.label))} →</a></p>` : ''}
+                 target="_blank" rel="noopener">${escapeHtml(TT(str(see.label)))} →</a></p>` : ''}
             ${mine.map(it => ironItemHTML(it, fx)).join('')}
           </section>`;
         });
@@ -1219,7 +1228,7 @@
              data-act="detail" data-kind="iron" data-rec="${escapeHtml(it.id)}" tabindex="0" role="button">
       <span class="row-main">
         <span class="row-name">${escapeHtml(it.name)}${qty > 1 ? ` <span class="t-dim num">×${qty}</span>` : ''}${
-          tethered ? ' <span class="row-flag" title="cloud-tethered">☁</span>' : ''}</span>
+          tethered ? ` <span class="row-flag" title="${escapeHtml(TT('cloud-tethered'))}">☁</span>` : ''}</span>
         <span class="row-sub num">${escapeHtml(str(spec))}</span>
       </span>
       <span class="row-num">${escapeHtml(fmtUSD(line))}</span>
@@ -1251,7 +1260,7 @@
       const btns = chans.map(c => {
         const on = str(c.id) === str(state.sneakChannel);
         return `<button class="seg-btn${on ? ' active' : ''}" type="button" data-act="sneak-chan" data-chan="${escapeHtml(c.id)}">
-          ${escapeHtml((c.icon ? c.icon + ' ' : '') + str(c.label))}
+          ${escapeHtml(labelOf(c))}
         </button>`;
       }).join('');
       setHTML(sel, `<span class="ctl-lbl">${TT('Channel')}</span><div class="seg">${btns}</div>`);
@@ -1419,7 +1428,7 @@
         }).join('')
         + (cadence.length ? `<div class="d-lbl">${TT('Maintenance rhythm')}</div>
             <div class="d-facts">${cadence.map(c2 =>
-              `<span class="d-k">${escapeHtml(c2.task)}</span><span class="d-v">${escapeHtml(c2.every)}</span>`).join('')}</div>` : '');
+              `<span class="d-k">${escapeHtml(c2.task)}</span><span class="d-v">${escapeHtml(TT(str(c2.every)))}</span>`).join('')}</div>` : '');
       } else if (v === 'basis') {
         const principles = arr(d.principles).filter(planMatch);
         const layers = arr(d.layers).filter(planMatch);
@@ -1456,7 +1465,7 @@
         <span class="row-sub">${escapeHtml(str(p.deliverable))}</span>
         ${tasks.length ? `<span class="bar mini"><span class="bar-fill" data-fill="${escapeHtml(str(p.id))}" style="width:${pct}%"></span></span>` : ''}
       </span>
-      <span class="row-cat">${escapeHtml(str(p.window))}</span>
+      <span class="row-cat">${escapeHtml(TT(str(p.window)))}</span>
       <span class="row-num num" data-progress="${escapeHtml(str(p.id))}">${done}/${tasks.length}</span>
     </article>`;
   }
@@ -1495,17 +1504,17 @@
       /* no chips: Start is the map of the site, and its search already spans
          every section — a filter row here would be filtering nothing. */
     } else if (panel === 'grab') {
-      grabTiers().forEach(t => out.push({ key: 'tier:' + str(t.id), label: str(t.label) }));
+      grabTiers().forEach(t => out.push({ key: 'tier:' + str(t.id), label: TT(str(t.label)) }));
       arr(DATA.grab && DATA.grab.cats).forEach(c =>
-        out.push({ key: 'cat:' + str(c.id), label: (c.icon ? c.icon + ' ' : '') + str(c.label) }));
+        out.push({ key: 'cat:' + str(c.id), label: labelOf(c) }));
     } else if (panel === 'stack') {
       ['full', 'sync', 'tethered'].forEach(k => out.push({ key: 'offline:' + k, label: TT(RATINGS[k].label) }));
       arr(DATA.stack && DATA.stack.roles).forEach(r =>
-        out.push({ key: 'role:' + str(r.id), label: (r.icon ? r.icon + ' ' : '') + str(r.label) }));
+        out.push({ key: 'role:' + str(r.id), label: labelOf(r) }));
     } else if (panel === 'iron') {
       out.push({ key: 'cloud:no', label: TT('cloud-tethered only') });
       arr(DATA.iron && DATA.iron.groups).forEach(g =>
-        out.push({ key: 'group:' + str(g.id), label: (g.icon ? g.icon + ' ' : '') + str(g.label) }));
+        out.push({ key: 'group:' + str(g.id), label: labelOf(g) }));
     } else if (panel === 'sneak') {
       /* no chips: the channel segmented control in the panel already does this,
          and two selectors for one choice is just confusing */
@@ -1631,7 +1640,9 @@
   function setPanel(key, opts) {
     const sec = SEC_BY_KEY[key];
     if (!sec) return;
-    closeDetail();          // a modal from the previous section must not survive the switch
+    /* a modal from the previous section must not survive the switch; a route
+       to another record keeps it open and swaps what it shows instead */
+    if (!(opts && opts.keepDetail)) closeDetail();
     state.panel = key;
 
     SECTIONS.forEach(s => {
@@ -1699,8 +1710,9 @@
     if (fl) fl.textContent = TT('Runs entirely in your browser. Every entry links to its source; checked {date}.').replace('{date}', when);
   }
 
-  /* Hub convention: #<panel-hash> selects a panel; any other #tag, or a ?q=,
-     is treated as a search term and routed to the panel that answers it. */
+  /* Hub convention: #<panel-hash> selects a panel, #<kind>/<id> opens one
+     record; any other #tag, or a ?q=, is treated as a search term and routed
+     to the panel that answers it. */
   function routeFromLocation() {
     let term = '';
     try {
@@ -1712,6 +1724,26 @@
     /* A hub link may append its own query to a panel hash (#triage?ref=hub); the
        raw fragment still wins so a search term containing ? or & survives. */
     const sec = SEC_BY_HASH[hash] || SEC_BY_HASH[hash.split(/[?&]/)[0]];
+
+    /* #<kind>/<id> is one record: its panel behind, its dialog on top */
+    const entry = parseEntry(hash);
+    if (entry) {
+      const panel = KIND_FILE[entry.kind] || 'start';
+      const rec = findRec(entry.kind, entry.id);
+      revealRecord(entry.kind, rec);
+      setPanel(panel, { silent: true, keepDetail: true });
+      let row = rowFor(entry.kind, rec);
+      /* a search or chip that hides the record would leave nothing behind the
+         dialog and nothing for focus to return to: the link wins */
+      if (!row && panel !== 'start' && (state.q || state.chip[panel])) {
+        state.q = ''; state.chip[panel] = '';
+        const q = $('q'); if (q) q.value = '';
+        renderChips(); renderActive();
+        row = rowFor(entry.kind, rec);
+      }
+      openDetail(entry.kind, entry.id, row ? { returnFocus: row } : null);
+      return;
+    }
 
     if (sec) setPanel(sec.key, { silent: true });
     else if (hash && !term) {
@@ -1728,6 +1760,38 @@
       if (best && !sec) setPanel(best, { silent: true });
     }
     if (!sec && !term) setPanel(state.panel, { silent: true });
+  }
+
+  /* A link to one record also selects the sub-view that holds its row (the
+     Sneakernet channel and sub-tab, the Playbook sub-tab, an Iron tier that
+     carries it, an expanded Triage tier), so closing the dialog lands on it. */
+  const SNEAK_SUB = { media: 'media', recipe: 'recipes', artifact: 'artifacts', use: 'uses' };
+  const PLAN_SUB  = { threat: 'threats', phase: 'phases', brk: 'breaks', drill: 'rhythm', layer: 'basis' };
+  function revealRecord(kind, rec) {
+    if (!rec) return;
+    if (SNEAK_SUB[kind]) {
+      if (rec.channel) state.sneakChannel = str(rec.channel);
+      state.sneakSub = SNEAK_SUB[kind];
+    } else if (PLAN_SUB[kind]) {
+      state.planSub = PLAN_SUB[kind];
+    } else if (kind === 'iron') {
+      if (!inTier(rec, state.ironTier)) {
+        const t = ironTiers().filter(x => inTier(rec, x.id))[0];
+        if (t) state.ironTier = str(t.id);
+      }
+    } else if (kind === 'grab') {
+      if (rec.tier) state.collapsed[str(rec.tier)] = false;
+    }
+  }
+
+  /* The row that stands for a record in the active panel, by own id or list index. */
+  function rowFor(kind, rec) {
+    const sec = SEC_BY_KEY[state.panel];
+    const panel = sec && $(sec.panel);
+    if (!rec || !panel || !DETAIL[kind]) return null;
+    const keys = [str(rec.id), String(DETAIL[kind].list().indexOf(rec))].filter(Boolean);
+    return $$('[data-act="detail"][data-kind="' + kind + '"]', panel)
+      .filter(el => keys.indexOf(el.getAttribute('data-rec')) !== -1 && el.getClientRects().length)[0] || null;
   }
 
   function onSearch() {
@@ -1837,7 +1901,6 @@
         openDetail(el.getAttribute('data-kind'), el.getAttribute('data-rec'));
         return;
       }
-      if (act === 'modal-close') { closeDetail(); return; }
 
       if (act === 'grab-all' || act === 'grab-none' || act === 'grab-inbudget') {
         const fits = computeFits();
@@ -1866,7 +1929,8 @@
 
     // keyboard parity for the .code blocks and rows, which are divs acting as buttons
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { closeMenus(); closeDetail(); return; }
+      // an open dialog takes Esc first (carino-ui.js), so this only reaches menus
+      if (e.key === 'Escape') { closeMenus(); return; }
 
       /* role=tablist comes with a keyboard contract: arrows move between tabs,
          Home/End jump to the ends, and moving selects. */
@@ -1898,9 +1962,11 @@
       if (go) { e.preventDefault(); setPanel(go.getAttribute('data-panel') || state.panel); }
     });
 
-    // click on the backdrop (but not the dialog) dismisses
-    const backdrop = $('modal');
-    if (backdrop) backdrop.addEventListener('click', e => { if (e.target === backdrop) closeDetail(); });
+    /* dialog.close() fires "close" a task later, so a close then an open inside
+       one task delivers it to a dialog that is open again; carino-ui.js would
+       take it for a real close. Registered first, this drops the stale one. */
+    const dlg = $('modal');
+    if (dlg) dlg.addEventListener('close', e => { if (dlg.open) e.stopImmediatePropagation(); });
 
     document.addEventListener('change', e => {
       const el = e.target;
@@ -1948,8 +2014,6 @@
      caveats live in here, one click away. That is what keeps a
      66-item list readable as a list instead of an essay.
      ───────────────────────────────────────────────────────────── */
-
-  let lastFocus = null;
 
   /* kind → where the record lives and what titles it */
   const DETAIL = {
@@ -2026,7 +2090,7 @@
     if (kind === 'step') {
       const sec = SEC_BY_KEY[str(r.goes)];
       return dPara('', r.what) + dPara('Why', r.why)
-        + (sec ? `<div class="d-foot"><button class="btn btn-primary" type="button" data-act="go" data-panel="${escapeHtml(sec.key)}">${escapeHtml(TT(sec.title))} →</button></div>` : '');
+        + `<div class="d-foot">${sec ? `<button class="btn btn-primary" type="button" data-act="go" data-panel="${escapeHtml(sec.key)}">${escapeHtml(TT(sec.title))} →</button>` : ''}${srcLine(kind, r)}</div>`;
     }
 
     if (kind === 'route') {
@@ -2069,7 +2133,7 @@
             + (f.also ? `<p class="d-p t-dim">${escapeHtml(str(f.also))}</p>` : '')
             + `<div class="alts"><button class="alt" type="button" data-act="detail"
                  data-kind="fleetnote" data-rec="0">${TT('What it cannot serve, and why')}</button></div>` : '')
-        + (r.url ? `<div class="d-foot">${link(r.url)}</div>` : '');
+        + `<div class="d-foot">${srcLine(kind, r)}</div>`;
     }
 
     if (kind === 'limit') return dPara('', r.what) + dPara('Why', r.why);
@@ -2080,9 +2144,9 @@
         + (r.note ? dPara(isWont(r) ? 'Instead' : 'Note', r.note, isWont(r) ? 't-ok' : '') : '')
         + (r.get ? `<div class="d-lbl">${TT('How to fetch it')}</div>` + code(r.get) : '')
         + dFacts([
-            ['Size', isWont(r) ? '—' : (str(r.size) || fmtSize(r.gb))],
+            ['Size', isWont(r) ? '—' : (TT(str(r.size)) || fmtSize(r.gb))],
             ['Time', isWont(r) ? '—' : fmtMins(r.minutes)],
-            ['Category', cat ? str(cat.label) : ''],
+            ['Category', cat ? labelOf(cat) : ''],
             ['Store on', r.store], ['Verify', r.verify]
           ]) + foot();
     }
@@ -2111,7 +2175,7 @@
         + dFacts([
             ['Spec', spec], ['Unit', fmtUSD(r.usd)], ['Quantity', qty],
             ['Line total', fmtUSD(line) + ' · ' + fmtMXN(line * fx, 10)],
-            ['In tiers', arr(r.tiers).join(' · ')], ['Source in MX', r.mx]
+            ['In tiers', arr(r.tiers).map(id => { const t = ironTierById(id); return t ? TT(str(t.label)) : str(id); }).join(' · ')], ['Source in MX', r.mx]
           ])
         + altsRow(r.alts, 'Or') + foot();
     }
@@ -2135,7 +2199,7 @@
     if (kind === 'brk')   return dPara('Why', r.why) + dPara('Mitigation', r.mitigation)
         + dFacts([['Severity', TT(str(r.severity))]]);
     if (kind === 'drill') return dPara('Rules', r.how) + dSteps(r.steps) + dPara('Pass', r.pass, 't-ok')
-        + dFacts([['Cadence', r.cadence]]);
+        + dFacts([['Cadence', TT(str(r.cadence))]]);
     if (kind === 'layer') return dPara('', r.d) + (r.rule ? dPara('Rule', r.rule, 't-accent') : '');
 
     if (kind === 'phase') {
@@ -2152,32 +2216,66 @@
               <span>${escapeHtml(task)}</span></label>`;
           }).join('')
         + (r.exit ? `<div class="tl-exit"><b>${TT('Exit')}</b> — ${escapeHtml(r.exit)}</div>` : '')
-        + dFacts([['Window', r.window]]);
+        + dFacts([['Window', r.window ? TT(str(r.window)) : '']]);
     }
     return '';
   }
 
-  function openDetail(kind, id) {
+  /* A record's link is #<kind>/<id>: its own id when it has one, else its
+     index (breaks carry none), so findRec() resolves both. */
+  const ENTRY_RE = /^([a-z]+)\/(.+)$/;
+
+  function entryHash(kind, id, rec) {
+    const own = rec && rec.id != null && rec.id !== '' ? str(rec.id) : str(id);
+    return '#' + kind + '/' + encodeURIComponent(own);
+  }
+
+  function parseEntry(hash) {
+    const m = ENTRY_RE.exec(str(hash));
+    if (!m || !DETAIL[m[1]]) return null;
+    let id = m[2];
+    try { id = decodeURIComponent(id); } catch (e) { /* a stray % stays as typed */ }
+    return findRec(m[1], id) ? { kind: m[1], id: id } : null;
+  }
+
+  /* Closing hands the address back to the panel, unless a route already moved it on. */
+  let detailShown = null;   // { kind, rec } of what the dialog shows now
+  function onDetailClosed(reason) {
+    /* A deep link has no opener, and a re-render (language, data) can replace
+       the row that opened it: focus then goes to the record's row as it is now. */
+    const a = document.activeElement;
+    const box = $('modal');
+    const dismissed = reason === 'escape' || reason === 'backdrop' || reason === 'button';
+    if (dismissed && detailShown && (!a || a === document.body || !a.isConnected || (box && box.contains(a)))) {
+      const row = rowFor(detailShown.kind, detailShown.rec);
+      if (row) row.focus();
+    }
+    detailShown = null;
+    if (!ENTRY_RE.test(str(location.hash).replace(/^#/, ''))) return;
+    const sec = SEC_BY_KEY[state.panel];
+    if (sec) history.replaceState(null, '', '#' + sec.hash);
+  }
+
+  /* The dialog is a native <dialog class="modal">; carino-ui.js CarinoUI.modal
+     answers Esc, ✕ (data-close) and the backdrop, and returns focus to the row. */
+  function openDetail(kind, id, opts) {
     const rec = findRec(kind, id);
     const box = $('modal'), ttl = $('modalTitle'), body = $('modalBody');
     if (!rec || !box || !ttl || !body) return;
-    lastFocus = document.activeElement;
     ttl.textContent = str(DETAIL[kind].title(rec));
-    body.innerHTML = detailBody(kind, rec) || `<p class="d-p t-dim">${TT('Nothing further recorded.')}</p>`;
-    box.hidden = false;
-    /* aria-modal only describes intent; inert is what actually keeps Tab inside.
-       Every body child is inerted because carino-navbar.js moves the tabs and
-       header controls out of .wrap, so inerting .wrap alone would miss them. */
-    setBackgroundInert(box, true);
+    let html = detailBody(kind, rec) || `<p class="d-p t-dim">${TT('Nothing further recorded.')}</p>`;
+    // every record ends in its source line, whichever kind it is
+    if (html.indexOf('class="src-line"') === -1) html += `<div class="d-foot">${srcLine(kind, rec)}</div>`;
+    body.innerHTML = html;
+    body.scrollTop = 0;
+    detailShown = { kind: kind, rec: rec };
     const close = $('modalClose');
-    if (close) close.focus();
-  }
-
-  function setBackgroundInert(box, on) {
-    Array.prototype.slice.call(document.body.children).forEach(el => {
-      if (el === box) return;
-      if (on) el.inert = true; else el.inert = false;
-    });
+    if (close) close.setAttribute('aria-label', TT('Close'));
+    CarinoUI.modal.open(box, Object.assign({ onClose: onDetailClosed }, opts || {}));
+    // a record opened from inside the dialog replaced what had focus
+    if (close) close.focus({ preventScroll: true });
+    const h = entryHash(kind, id, rec);
+    if (location.hash !== h) history.replaceState(null, '', h);
   }
 
   function closeMenus() {
@@ -2187,11 +2285,7 @@
 
   function closeDetail() {
     const box = $('modal');
-    if (!box || box.hidden) return;
-    box.hidden = true;
-    setBackgroundInert(box, false);
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
-    lastFocus = null;
+    if (box) CarinoUI.modal.close(box);
   }
 
   /* ─────────────────────────────────────────────────────────────
