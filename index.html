@@ -505,10 +505,6 @@
   <!-- Colourful theme + the switch; nothing applies until data-carino-theme="color". -->
   <link rel="stylesheet" href="carino-theme.css">
   <style>
-    /* The navbar stays on screen at every width; anything else that sticks
-       sits under it (--nav-h is its height, from carino-ui.css). */
-    html body #carinoNav { position: sticky; top: 0; }
-    .fchips { top: var(--nav-h); }
     /* the hero mark in both colourings; the theme picks one */
     .mark.mk-color, :root[data-carino-theme="color"] .mark.mk-gold { display: none; }
     :root[data-carino-theme="color"] .mark.mk-color { display: block; }
