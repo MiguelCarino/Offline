@@ -28,6 +28,24 @@
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Carino Offline", "url": "https://offline.carino.systems/", "description": "What to download before you can't, which software still works with the WAN cable pulled, what the hardware costs in Mexico, and how physical media beats a blocked route. Runs entirely in your browser, offline.", "operatingSystem": "Any (runs in a web browser)", "isAccessibleForFree": true, "author": {"@type": "Person", "name": "Miguel Cariño", "url": "https://carino.systems/"}}</script>
   <!-- /carino:head -->
 
+  <!-- Theme before first paint, so neither theme flashes the other:
+       ?theme=gold|color (review links; not stored) > carino-theme cookie
+       (shared across *.carino.systems) > localStorage > Gold & Black. -->
+  <meta name="theme-color" content="#050505" id="carinoThemeColor">
+  <script>
+  (function () {
+    var d = document.documentElement, t = null;
+    function pick(v) { return v === 'gold' ? 'gold' : (v === 'color' || v === 'colour') ? 'color' : null; }
+    try { t = pick(new URLSearchParams(location.search).get('theme')); } catch (e) {}
+    if (!t) { try { var m = document.cookie.match(/(?:^|;\s*)carino-theme=([^;]*)/); if (m) t = pick(decodeURIComponent(m[1])); } catch (e) {} }
+    if (!t) { try { t = pick(localStorage.getItem('carino-theme')); } catch (e) {} }
+    t = t || 'gold';
+    d.setAttribute('data-carino-theme', t);
+    var dark = d.getAttribute('data-theme') !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+    var meta = document.getElementById('carinoThemeColor');
+    if (meta) meta.content = t === 'gold' ? '#050505' : (dark ? '#0e1420' : '#eef3fc');
+  })();
+  </script>
   <link rel="stylesheet" href="fonts/carino-fonts.css">
   <link rel="stylesheet" href="carino-ui.css">
 
@@ -484,6 +502,23 @@
     .site-foot{max-width:1180px;margin:24px auto 0;padding-left:20px;padding-right:20px;}
     @media(max-width:640px){.site-foot{padding-left:12px;padding-right:12px;}}
 </style>
+  <!-- Colourful theme + the switch; nothing applies until data-carino-theme="color". -->
+  <link rel="stylesheet" href="carino-theme.css">
+  <style>
+    /* the hero mark in both colourings; the theme picks one */
+    .mark.mk-color, :root[data-carino-theme="color"] .mark.mk-gold { display: none; }
+    :root[data-carino-theme="color"] .mark.mk-color { display: block; }
+    /* Colourful: carino-theme.css remaps the tokens, so everything that reads
+       one follows; these are the values written for black. */
+    :root[data-carino-theme="color"] { --primary-hover: var(--ct-accent-strong); --border-glow: var(--accent-dim); }
+    :root[data-carino-theme="color"] body { background-image: var(--stage-grad); }
+    :root[data-carino-theme="color"] .app-title { background: none; -webkit-text-fill-color: currentColor; color: var(--ct-hero-text); }
+    :root[data-carino-theme="color"] .tab:hover, :root[data-carino-theme="color"] .seg-btn:hover { background: var(--ct-hover); }
+    :root[data-carino-theme="color"] .tab.active, :root[data-carino-theme="color"] .seg-btn.active { border-color: var(--accent-dim); }
+    :root[data-carino-theme="color"] .menu { box-shadow: var(--ct-shadow-2); }
+    :root[data-carino-theme="color"] .tbl tbody tr:hover td { background: var(--ct-hover); }
+    :root[data-carino-theme="color"] .escape, :root[data-carino-theme="color"] .escape b, :root[data-carino-theme="color"] .tier.wont .tier-name { color: var(--err); }
+  </style>
 </head>
 <body>
 
@@ -505,7 +540,8 @@
     <header class="landing-hero" id="startHero">
       <div class="lh-wrap">
         <div class="lh-mark" aria-hidden="true">
-          <img class="mark" src="logo.svg" alt="" width="100" height="100">
+          <img class="mark mk-gold" src="logo.svg" alt="" width="100" height="100">
+          <img class="mark mk-color" src="logo-color.svg" alt="" width="100" height="100">
           <!-- Two routes between the same two points. The top one is cut; the
                bottom one is dashed because it is a disc in a bag. Each route is
                drawn twice — a faint trace and a bright pulse over it. -->
@@ -619,6 +655,7 @@
   <script src="carino-ui.js" defer></script>
   <script src="app.js" defer></script>
   <script src="carino-navbar.js" data-app="Offline" data-repo="Offline" defer></script>
+  <script src="carino-theme.js" data-mark="logo.svg" data-mark-color="logo-color.svg" defer></script>
   <script src="carino-lang.js" defer></script>
   <script src="i18n.js" defer></script>
 </body>
