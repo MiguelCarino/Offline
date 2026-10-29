@@ -300,9 +300,7 @@ const I18N = {
         "Switch to it": "Cómo cambiarte",
         "Repository": "Repositorio",
         // Hero, filter bar, source lines and footer
-        'Source': 'Código fuente',
         'Report a dead link': 'Reportar un enlace roto',
-        'Legal & privacy': 'Aviso legal y privacidad',
         'Serve this folder over http:// or check that the data/ directory is intact.': 'Sirve esta carpeta por http:// o comprueba que el directorio data/ esté completo.',
         'Source:': 'Fuente:',
         'checked': 'revisado',
@@ -632,9 +630,7 @@ const I18N = {
         "Switch to it": "Como migrar",
         "Repository": "Repositório",
         // Hero, filter bar, source lines and footer
-        'Source': 'Código-fonte',
         'Report a dead link': 'Informar link quebrado',
-        'Legal & privacy': 'Aviso legal e privacidade',
         'Serve this folder over http:// or check that the data/ directory is intact.': 'Sirva esta pasta por http:// ou verifique se o diretório data/ está completo.',
         'Source:': 'Fonte:',
         'checked': 'verificado',
@@ -964,9 +960,7 @@ const I18N = {
         "Switch to it": "切り替え方",
         "Repository": "リポジトリ",
         // Hero, filter bar, source lines and footer
-        'Source': 'ソースコード',
         'Report a dead link': 'リンク切れを報告',
-        'Legal & privacy': '法的情報とプライバシー',
         'Serve this folder over http:// or check that the data/ directory is intact.': 'このフォルダーを http:// で配信するか、data/ ディレクトリが揃っているか確認してください。',
         'Source:': '出典:',
         'checked': '確認',
@@ -1297,9 +1291,7 @@ const I18N = {
         "Switch to it": "Как перейти",
         "Repository": "Репозиторий",
         // Hero, filter bar, source lines and footer
-        'Source': 'Исходный код',
         'Report a dead link': 'Сообщить о битой ссылке',
-        'Legal & privacy': 'Правовая информация и конфиденциальность',
         'Serve this folder over http:// or check that the data/ directory is intact.': 'Откройте папку через http:// или проверьте, что каталог data/ на месте.',
         'Source:': 'Источник:',
         'checked': 'проверено',
