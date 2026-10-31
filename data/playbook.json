@@ -229,7 +229,7 @@
         "Add a service worker per tool for install-to-homescreen and real PWA offline behaviour",
         "Write a Makefile that clones every fleet repo at a pinned commit and emits a Ventoy-compatible ISO",
         "Ship tools.json with LAN-relative URLs so the hub's search routing behaves identically offline",
-        "Verify the Carino Bridge handoff over file:// and over http://hub.carino.internal; Media to Metadata and PACS to DICOM-editor are the flows that matter",
+        "Verify the Carino Bridge handoff over file:// and over http://hub.carino.internal; Files to DICOM-editor and PACS to DICOM-editor are the flows that matter",
         "Include the es, pt-BR, ja and ru locale sets; offline should not mean English-only",
         "Sign the ISO and publish the SHA-256 in the git tag and on the printed card"
       ]

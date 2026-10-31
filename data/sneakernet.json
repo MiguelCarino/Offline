@@ -571,7 +571,7 @@
       "channel": "print",
       "name": "Tool quick-start card",
       "what": "One card per fleet tool: what it does in a sentence, three numbered steps, a QR to the LAN URL, and the offline caveat if it has one.",
-      "why": "The tools are self-explanatory to the person who built them. The card exists so a receptionist can use Metadata or a technician can use Retina without a login, a tutorial or a phone call — which is the actual product.",
+      "why": "The tools are self-explanatory to the person who built them. The card exists so a receptionist can use Files or a technician can use Retina without a login, a tutorial or a phone call — which is the actual product.",
       "how": "A6, colour, laminated. Ships in the box with hardware and lives next to the kiosk. The QR must point at the split-horizon public name so it works identically inside and outside the building.",
       "reprint": "when a tool's UI changes enough that step 2 stops being true"
     },

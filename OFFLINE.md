@@ -187,7 +187,7 @@ Without these, an offline machine slowly rots. Be **selective** — mirror the a
 | Comics/manga | **Komga** or Kavita | |
 | Books/PDF | **Calibre-Web** | |
 | Photos | **Immich** | Replaces Google Photos; the phone-backup story matters |
-| Documents | **Paperless-ngx** | OCR'd, searchable; ties into the Media suite's OCR work |
+| Documents | **Paperless-ngx** | OCR'd, searchable; ties into the Files suite's OCR work |
 | Files/calendar/contacts | **Nextcloud** | CalDAV/CardDAV so phones sync with no Google |
 
 **On content sourcing:** the library is built from material I can legitimately hold and, where relevant, redistribute — my own productions, purchased DRM-free media, public domain (Gutenberg, Archive.org), Creative Commons, and Kiwix's openly-licensed corpora. That distinction matters most at L5: *personal archiving* and *pressing 200 discs to hand out* are different acts under the Ley Federal del Derecho de Autor. The distributable catalog (§6.1) is deliberately built from libre + owned + self-produced content so the sneakernet layer is unambiguously mine to ship.
@@ -304,7 +304,7 @@ A single build artifact containing every `carino.systems` tool, served locally:
 - **`carino-offline/`** — a folder that runs from a USB stick via a bundled static server (or `file://` for the tools that support it)
 - **Docker compose bundle** — for anyone who already has a server
 
-Contents: the hub (search-first over `tools.json`), Retina, DICOM-editor, Metadata, Hash, Hardware, Learn, Stocks, Media, Topo, Asobi, Branding, MusicGrid, Quote, Desk, Kanban, Vitae, Compass, Depot, TV — plus Carino-PACS as an optional container.
+Contents: the hub (search-first over `tools.json`), Retina, DICOM-editor, Files, Hash, Hardware, Learn, Stocks, Topo, Asobi, Branding, MusicGrid, Quote, Desk, Kanban, Vitae, Compass, Depot, TV — plus Carino-PACS as an optional container.
 
 ### 5.2 Why it's nearly free to build
 
@@ -314,7 +314,7 @@ The fleet conventions already did the hard part: no CDN, self-hosted fonts, vend
 - [ ] Add a **service worker** to each tool for install-to-homescreen + true offline PWA behavior
 - [ ] Build a `Makefile` that clones all fleet repos at a pinned commit and emits the ISO
 - [ ] Ship `tools.json` with LAN-relative URLs so the hub's search routing works identically offline
-- [ ] Verify the **Carino Bridge** handoff (`#carino-bridge`) works over `file://` and over `http://hub.carino.internal` — Media→Metadata and PACS→DICOM-editor are the flows that matter
+- [ ] Verify the **Carino Bridge** handoff (`#carino-bridge`) works over `file://` and over `http://hub.carino.internal` — Files→DICOM-editor and PACS→DICOM-editor are the flows that matter
 - [ ] Include the i18n locale sets (es / pt-BR / ja / ru) — offline shouldn't mean English-only
 - [ ] Sign the ISO; publish the SHA-256 on the printed card *and* in the git tag
 
